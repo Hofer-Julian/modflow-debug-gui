@@ -18,6 +18,10 @@ def plot_model(sim, sim_path, layer):
     ygrids = {}
     vmin = np.inf
     vmax = -np.inf
+    xmin = np.inf
+    xmax = -np.inf
+    ymin = np.inf
+    ymax = -np.inf
 
     for model_name in list(sim.model_names):
         models.update({model_name: sim.get_model(model_name)})
@@ -38,13 +42,33 @@ def plot_model(sim, sim_path, layer):
         xgrids.update({model_name: np.array(models[model_name].modelgrid.xvertices)})
         ygrids.update({model_name: np.array(models[model_name].modelgrid.yvertices)})
 
-        local_min = np.min(plotarrays[model_name])
-        if local_min < vmin:
-            vmin = local_min
+        # Determine suitable plot ranges
+        local_vmin = np.min(plotarrays[model_name])
+        if local_vmin < vmin:
+            vmin = local_vmin
 
-        local_max = np.max(plotarrays[model_name])
-        if local_max > vmax:
-            vmax = local_max
+        local_vmax = np.max(plotarrays[model_name])
+        if local_vmax > vmax:
+            vmax = local_vmax
+
+        local_xmin = np.min(xgrids[model_name])
+        if local_xmin < xmin:
+            xmin = local_xmin
+
+        local_xmax = np.max(xgrids[model_name])
+        if local_xmax > xmax:
+            xmax = local_xmax
+
+        local_ymin = np.min(ygrids[model_name])
+        if local_ymin < ymin:
+            ymin = local_ymin
+
+        local_ymax = np.max(ygrids[model_name])
+        if local_ymax > ymax:
+            ymax = local_ymax
+
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
 
     for model_name in list(sim.model_names):
 
@@ -56,10 +80,13 @@ def plot_model(sim, sim_path, layer):
             vmax=vmax,
         )
 
+        # Text rendering is a performance problem.
+        # Among other things, because it renders outside plotrange
+        # which can be made visible by changing fontcolor
         for j in range(len(plotarrays[model_name][:, 0])):
             for k in range(len((plotarrays[model_name][0, :]))):
                 if plotarrays[model_name][j, k] != 0.0:
-                    text = plt.text(
+                    text = ax.text(
                         (xgrids[model_name][j, k] + xgrids[model_name][j + 1, k + 1])
                         / 2,
                         (ygrids[model_name][j, k] + ygrids[model_name][j + 1, k + 1])
@@ -67,7 +94,7 @@ def plot_model(sim, sim_path, layer):
                         f"{plotarrays[model_name][j, k]:02.0}",
                         ha="center",
                         va="center",
-                        color="w",
+                        color="white",
                         fontsize=8,
                     )
 
