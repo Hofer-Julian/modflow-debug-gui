@@ -3,6 +3,8 @@ from matplotlib import pyplot as plt
 import flopy
 import re
 import matplotlib.patches as mpatches
+import ctypes
+from collections import defaultdict
 
 
 def plot_model(sim, sim_path, layer):
@@ -133,21 +135,78 @@ def plot_model(sim, sim_path, layer):
             for line in exchangefile:
                 if line == "BEGIN exchangedata":
                     exchangedata_block = True
-                match = re.search(r"(\d+) (\d+) (\d+)  (\d+) (\d+) (\d+)", line)
-                if match:
-                    if (
-                        int(match.group(1)) == layer + 1
-                        and int(match.group(4)) == layer + 1
-                    ):
-                        plot_arrow(
-                            ax,
-                            file_data[2],
-                            file_data[3],
-                            int(match.group(2)),
-                            int(match.group(3)),
-                            int(match.group(5)),
-                            int(match.group(6)),
-                        )
+                if line == "END exchangedata":
+                    exchangedata_block = False
+
+                if exchangedata_block:
+                    match = re.search(r"(\d+) (\d+) (\d+)  (\d+) (\d+) (\d+)", line)
+                    if match:
+                        if (
+                            int(match.group(1)) == layer + 1
+                            and int(match.group(4)) == layer + 1
+                        ):
+                            plot_arrow(
+                                ax,
+                                file_data[2],
+                                file_data[3],
+                                int(match.group(2)),
+                                int(match.group(3)),
+                                int(match.group(5)),
+                                int(match.group(6)),
+                            )
 
     fig.colorbar(cm, ax=ax)
+
+
+def get_bmi_data(dllpath, keys):
+    print("running from mf6 dll: ", dllpath)
+    mf6 = ctypes.cdll.LoadLibrary(dllpath)
+
+    # initialize the model
+    mf6.initialize()
+
+    # get times
+    ct = ctypes.c_double(0.0)
+    mf6.get_current_time(ctypes.byref(ct))
+    et = ctypes.c_double(0.0)
+    mf6.get_end_time(ctypes.byref(et))
+    var_dict = defaultdict(dict)
+    for key in keys:
+        # get variable size(s)PliP
+        elsize = ctypes.c_int(0)
+        nbytes = ctypes.c_int(0)
+        var_dict[key]["name"] = ctypes.c_char_p(key)
+
+        mf6.get_var_itemsize(var_dict[key]["name"], ctypes.byref(elsize))
+        mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
+        nsize = int(nbytes.value / elsize.value)
+
+        # set the function prototype and declare the receiving pointers-to-array
+        arraytype = np.ctypeslib.ndpointer(
+            dtype="double", ndim=1, shape=(nsize,), flags="F"
+        )
+        # WHAT DOES argtypes AND restype DO AND WHERE ARE THEY DEFINED
+        mf6.get_value_ptr_double.argtypes = [ctypes.c_char_p, ctypes.POINTER(arraytype)]
+        mf6.get_value_ptr_double.restype = ctypes.c_int
+
+        var_dict[key]["type"] = arraytype()
+
+    # model time loop
+    while ct.value < et.value:
+        # calculate
+        mf6.update()
+
+        # update time
+        mf6.get_current_time(ctypes.byref(ct))
+
+        for key in keys:
+            # get data
+            mf6.get_value_ptr_double(
+                var_dict[key]["name"], ctypes.byref(var_dict[key]["type"])
+            )
+            vararray = var_dict[key]["type"].contents
+            print(key.decode("ASCII"), vararray)
+
+    # cleanup
+    mf6.finalize()
 
