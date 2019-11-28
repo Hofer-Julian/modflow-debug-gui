@@ -182,14 +182,13 @@ def get_bmi_data(dllpath, keys):
         nsize = int(nbytes.value / elsize.value)
 
         # set the function prototype and declare the receiving pointers-to-array
-        arraytype = np.ctypeslib.ndpointer(
+        var_dict[key]["arraytype"] = np.ctypeslib.ndpointer(
             dtype="double", ndim=1, shape=(nsize,), flags="F"
         )
-        # WHAT DOES argtypes AND restype DO AND WHERE ARE THEY DEFINED
-        mf6.get_value_ptr_double.argtypes = [ctypes.c_char_p, ctypes.POINTER(arraytype)]
+        mf6.get_value_ptr_double.argtypes = [ctypes.c_char_p, ctypes.POINTER(var_dict[key]["arraytype"])]
         mf6.get_value_ptr_double.restype = ctypes.c_int
 
-        var_dict[key]["type"] = arraytype()
+        var_dict[key]["type"] = var_dict[key]["arraytype"]()
 
     # model time loop
     while ct.value < et.value:
