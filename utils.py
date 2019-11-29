@@ -170,7 +170,43 @@ def get_bmi_data(dllpath, keys):
     mf6.get_current_time(ctypes.byref(ct))
     et = ctypes.c_double(0.0)
     mf6.get_end_time(ctypes.byref(et))
+
+    # acessing exported values from dll
+    maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN")
+
+    grid_id = ctypes.c_int(0)
+
+    # get grid type
+    grid_type = ctypes.create_string_buffer(maxstrlen.value)
+    mf6.get_grid_type(grid_id, grid_type)
+    print(f"grid type: {grid_type.value.decode('ASCII')}")
+
+    # get grid rank
+    grid_rank = ctypes.c_int(0)
+    mf6.get_grid_rank(grid_id, ctypes.byref(grid_rank))
+    print(f"grid rank: {grid_rank.value}")
+
+    # get grid size
+    grid_size = ctypes.c_int(0)
+    mf6.get_grid_size(grid_id, ctypes.byref(grid_size))
+    print(f"grid size: {grid_size.value}")
+
+    # get grid shape HERE IS SOMETHING WRONG
+    grid_shape_type = np.ctypeslib.ndpointer(
+        dtype="int", ndim=1, shape=(2,), flags="F"
+    )
+    grid_shape = grid_shape_type()
+    mf6.get_grid_shape.argtypes = [ctypes.c_int, ctypes.POINTER(grid_shape_type)]
+    mf6.get_grid_shape.restype = ctypes.c_int
+
+    mf6.get_grid_shape(
+        grid_id, ctypes.byref(grid_shape)
+    )
+    print(f"grid shape: {grid_shape.contents}")
+
+    # initialize dictionary
     var_dict = defaultdict(dict)
+
     for key in keys:
         # get variable size(s)PliP
         elsize = ctypes.c_int(0)
@@ -181,14 +217,11 @@ def get_bmi_data(dllpath, keys):
         mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
         nsize = int(nbytes.value / elsize.value)
 
-        # set the function prototype and declare the receiving pointers-to-array
-        var_dict[key]["arraytype"] = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(nsize,), flags="F"
-        )
-        mf6.get_value_ptr_double.argtypes = [ctypes.c_char_p, ctypes.POINTER(var_dict[key]["arraytype"])]
-        mf6.get_value_ptr_double.restype = ctypes.c_int
 
-        var_dict[key]["type"] = var_dict[key]["arraytype"]()
+        # declare the receiving pointers-to-array
+        var_dict[key]["array"] = np.ctypeslib.ndpointer(
+            dtype="double", ndim=1, shape=(nsize,), flags="F"
+        )()
 
     # model time loop
     while ct.value < et.value:
@@ -201,9 +234,9 @@ def get_bmi_data(dllpath, keys):
         for key in keys:
             # get data
             mf6.get_value_ptr_double(
-                var_dict[key]["name"], ctypes.byref(var_dict[key]["type"])
+                var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
             )
-            vararray = var_dict[key]["type"].contents
+            vararray = var_dict[key]["array"].contents
             print(key.decode("ASCII"), vararray)
 
     # cleanup
