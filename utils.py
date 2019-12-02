@@ -219,7 +219,6 @@ def get_bmi_data(dllpath, keys):
     print(f"grid y: {grid_y.contents}")
 
     # get grid z would be grid_shape.contents[-3]
-
     
 
     # initialize dictionary
