@@ -7,7 +7,7 @@ import ctypes
 from collections import defaultdict
 
 
-def plot_model(sim, sim_path, layer):
+def plot_model(sim, sim_path, layer, display_text=True):
 
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 10)
@@ -81,24 +81,24 @@ def plot_model(sim, sim_path, layer):
             vmin=vmin,
             vmax=vmax,
         )
-
-        # Text rendering is a performance problem.
-        # Among other things, because it renders outside plotrange
-        # which can be made visible by changing fontcolor
-        for j in range(len(plotarrays[model_name][:, 0])):
-            for k in range(len((plotarrays[model_name][0, :]))):
-                if plotarrays[model_name][j, k] != 0.0:
-                    text = ax.text(
-                        (xgrids[model_name][j, k] + xgrids[model_name][j + 1, k + 1])
-                        / 2,
-                        (ygrids[model_name][j, k] + ygrids[model_name][j + 1, k + 1])
-                        / 2,
-                        f"{plotarrays[model_name][j, k]:02.0}",
-                        ha="center",
-                        va="center",
-                        color="white",
-                        fontsize=8,
-                    )
+        if display_text:
+            # Text rendering is a performance problem.
+            # Among other things, because it renders outside plotrange
+            # which can be made visible by changing fontcolor
+            for j in range(len(plotarrays[model_name][:, 0])):
+                for k in range(len((plotarrays[model_name][0, :]))):
+                    if plotarrays[model_name][j, k] != 0.0:
+                        text = ax.text(
+                            (xgrids[model_name][j, k] + xgrids[model_name][j + 1, k + 1])
+                            / 2,
+                            (ygrids[model_name][j, k] + ygrids[model_name][j + 1, k + 1])
+                            / 2,
+                            f"{plotarrays[model_name][j, k]:02.0}",
+                            ha="center",
+                            va="center",
+                            color="white",
+                            fontsize=8,
+                        )
 
     def plot_arrow(ax, model_name_1, model_name_2, row_1, column_1, row_2, column_2):
         x_middlepoint_1 = (
@@ -128,32 +128,32 @@ def plot_model(sim, sim_path, layer):
     exchangedata_files = sim.simulation_data.mfdata[
         "nam", "exchanges", "exchanges"
     ].get_data()
+    if exchangedata_files:
+        for file_data in exchangedata_files:
+            with open(sim_path / file_data[1], "r") as exchangefile:
+                exchangedata_block = False
+                for line in exchangefile:
+                    if line == "BEGIN exchangedata":
+                        exchangedata_block = True
+                    if line == "END exchangedata":
+                        exchangedata_block = False
 
-    for file_data in exchangedata_files:
-        with open(sim_path / file_data[1], "r") as exchangefile:
-            exchangedata_block = False
-            for line in exchangefile:
-                if line == "BEGIN exchangedata":
-                    exchangedata_block = True
-                if line == "END exchangedata":
-                    exchangedata_block = False
-
-                if exchangedata_block:
-                    match = re.search(r"(\d+) (\d+) (\d+)  (\d+) (\d+) (\d+)", line)
-                    if match:
-                        if (
-                            int(match.group(1)) == layer + 1
-                            and int(match.group(4)) == layer + 1
-                        ):
-                            plot_arrow(
-                                ax,
-                                file_data[2],
-                                file_data[3],
-                                int(match.group(2)),
-                                int(match.group(3)),
-                                int(match.group(5)),
-                                int(match.group(6)),
-                            )
+                    if exchangedata_block:
+                        match = re.search(r"(\d+) (\d+) (\d+)  (\d+) (\d+) (\d+)", line)
+                        if match:
+                            if (
+                                int(match.group(1)) == layer + 1
+                                and int(match.group(4)) == layer + 1
+                            ):
+                                plot_arrow(
+                                    ax,
+                                    file_data[2],
+                                    file_data[3],
+                                    int(match.group(2)),
+                                    int(match.group(3)),
+                                    int(match.group(5)),
+                                    int(match.group(6)),
+                                )
 
     fig.colorbar(cm, ax=ax)
 
@@ -202,7 +202,7 @@ def get_bmi_data(dllpath, keys):
 
     # get grid x
     grid_x = np.ctypeslib.ndpointer(
-        dtype="int", ndim=1, shape=(grid_shape.contents[-1],), flags="F"
+        dtype="double", ndim=1, shape=(grid_shape.contents[-1],), flags="F"
     )()
     mf6.get_grid_x(
         grid_id, ctypes.byref(grid_x)
@@ -211,7 +211,7 @@ def get_bmi_data(dllpath, keys):
 
     # get grid y
     grid_y = np.ctypeslib.ndpointer(
-        dtype="int", ndim=1, shape=(grid_shape.contents[-2],), flags="F"
+        dtype="double", ndim=1, shape=(grid_shape.contents[-2],), flags="F"
     )()
     mf6.get_grid_y(
         grid_id, ctypes.byref(grid_y)
