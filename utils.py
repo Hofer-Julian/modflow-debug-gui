@@ -191,18 +191,19 @@ def get_bmi_data(dllpath, keys):
     mf6.get_grid_size(grid_id, ctypes.byref(grid_size))
     print(f"grid size: {grid_size.value}")
 
-    # get grid shape HERE IS SOMETHING WRONG
+    # get grid shape
     grid_shape_type = np.ctypeslib.ndpointer(
-        dtype="int", ndim=1, shape=(2,), flags="F"
+        dtype="int", ndim=1, shape=(grid_rank.value,), flags="F"
     )
     grid_shape = grid_shape_type()
     mf6.get_grid_shape.argtypes = [ctypes.c_int, ctypes.POINTER(grid_shape_type)]
     mf6.get_grid_shape.restype = ctypes.c_int
-
     mf6.get_grid_shape(
         grid_id, ctypes.byref(grid_shape)
     )
     print(f"grid shape: {grid_shape.contents}")
+
+    
 
     # initialize dictionary
     var_dict = defaultdict(dict)
