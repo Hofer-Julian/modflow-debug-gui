@@ -192,16 +192,33 @@ def get_bmi_data(dllpath, keys):
     print(f"grid size: {grid_size.value}")
 
     # get grid shape
-    grid_shape_type = np.ctypeslib.ndpointer(
+    grid_shape = np.ctypeslib.ndpointer(
         dtype="int", ndim=1, shape=(grid_rank.value,), flags="F"
-    )
-    grid_shape = grid_shape_type()
-    mf6.get_grid_shape.argtypes = [ctypes.c_int, ctypes.POINTER(grid_shape_type)]
-    mf6.get_grid_shape.restype = ctypes.c_int
+    )()
     mf6.get_grid_shape(
         grid_id, ctypes.byref(grid_shape)
     )
     print(f"grid shape: {grid_shape.contents}")
+
+    # get grid x
+    grid_x = np.ctypeslib.ndpointer(
+        dtype="int", ndim=1, shape=(grid_shape.contents[-1],), flags="F"
+    )()
+    mf6.get_grid_x(
+        grid_id, ctypes.byref(grid_x)
+    )
+    print(f"grid x: {grid_x.contents}")
+
+    # get grid y
+    grid_y = np.ctypeslib.ndpointer(
+        dtype="int", ndim=1, shape=(grid_shape.contents[-2],), flags="F"
+    )()
+    mf6.get_grid_y(
+        grid_id, ctypes.byref(grid_y)
+    )
+    print(f"grid y: {grid_y.contents}")
+
+    # get grid z would be grid_shape.contents[-3]
 
     
 
