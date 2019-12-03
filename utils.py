@@ -89,9 +89,15 @@ def plot_model(sim, sim_path, layer, display_text=True):
                 for k in range(len((plotarrays[model_name][0, :]))):
                     if plotarrays[model_name][j, k] != 0.0:
                         text = ax.text(
-                            (xgrids[model_name][j, k] + xgrids[model_name][j + 1, k + 1])
+                            (
+                                xgrids[model_name][j, k]
+                                + xgrids[model_name][j + 1, k + 1]
+                            )
                             / 2,
-                            (ygrids[model_name][j, k] + ygrids[model_name][j + 1, k + 1])
+                            (
+                                ygrids[model_name][j, k]
+                                + ygrids[model_name][j + 1, k + 1]
+                            )
                             / 2,
                             f"{plotarrays[model_name][j, k]:02.0}",
                             ha="center",
@@ -184,42 +190,40 @@ def get_bmi_data(dllpath, keys):
     # get grid rank
     grid_rank = ctypes.c_int(0)
     mf6.get_grid_rank(grid_id, ctypes.byref(grid_rank))
-    print(f"grid rank: {grid_rank.value}")
+    grid_rank = grid_rank.value
+    print(f"grid rank: {grid_rank}")
 
     # get grid size
     grid_size = ctypes.c_int(0)
     mf6.get_grid_size(grid_id, ctypes.byref(grid_size))
-    print(f"grid size: {grid_size.value}")
+    grid_size.value = grid_size.value
+    print(f"grid size: {grid_size}")
 
     # get grid shape
     grid_shape = np.ctypeslib.ndpointer(
-        dtype="int", ndim=1, shape=(grid_rank.value,), flags="F"
+        dtype="int", ndim=1, shape=(grid_rank,), flags="F"
     )()
-    mf6.get_grid_shape(
-        grid_id, ctypes.byref(grid_shape)
-    )
-    print(f"grid shape: {grid_shape.contents}")
+    mf6.get_grid_shape(grid_id, ctypes.byref(grid_shape))
+    grid_shape = grid_shape.contents
+    print(f"grid shape: {grid_shape}")
 
     # get grid x
     grid_x = np.ctypeslib.ndpointer(
-        dtype="double", ndim=1, shape=(grid_shape.contents[-1],), flags="F"
+        dtype="double", ndim=1, shape=(grid_shape[-1],), flags="F"
     )()
-    mf6.get_grid_x(
-        grid_id, ctypes.byref(grid_x)
-    )
-    print(f"grid x: {grid_x.contents}")
+    mf6.get_grid_x(grid_id, ctypes.byref(grid_x))
+    grid_x = grid_x.contents
+    print(f"grid x: {grid_x}")
 
     # get grid y
     grid_y = np.ctypeslib.ndpointer(
-        dtype="double", ndim=1, shape=(grid_shape.contents[-2],), flags="F"
+        dtype="double", ndim=1, shape=(grid_shape[-2],), flags="F"
     )()
-    mf6.get_grid_y(
-        grid_id, ctypes.byref(grid_y)
-    )
-    print(f"grid y: {grid_y.contents}")
+    mf6.get_grid_y(grid_id, ctypes.byref(grid_y))
+    grid_y = grid_y.contents
+    print(f"grid y: {grid_y}")
 
     # get grid z would be grid_shape.contents[-3]
-    
 
     # initialize dictionary
     var_dict = defaultdict(dict)
@@ -233,7 +237,6 @@ def get_bmi_data(dllpath, keys):
         mf6.get_var_itemsize(var_dict[key]["name"], ctypes.byref(elsize))
         mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
         nsize = int(nbytes.value / elsize.value)
-
 
         # declare the receiving pointers-to-array
         var_dict[key]["array"] = np.ctypeslib.ndpointer(
@@ -253,8 +256,10 @@ def get_bmi_data(dllpath, keys):
             mf6.get_value_ptr_double(
                 var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
             )
-            vararray = var_dict[key]["array"].contents
+            vararray = var_dict[key]["array"].contents.reshape(grid_shape)
             print(key.decode("ASCII"), vararray)
+
+        # TODO: correctly reshape grid_x, grid_y and vararray(head) and plot them with pcolormesh
 
     # cleanup
     mf6.finalize()
