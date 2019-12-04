@@ -256,10 +256,13 @@ def get_bmi_data(dllpath, keys):
             mf6.get_value_ptr_double(
                 var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
             )
-            vararray = var_dict[key]["array"].contents.reshape(grid_shape)
+            # TODO: Check if "A" is the right option to use
+            vararray = var_dict[key]["array"].contents.reshape(grid_shape, order="A")
             print(key.decode("ASCII"), vararray)
 
-        # TODO: correctly reshape grid_x, grid_y and vararray(head) and plot them with pcolormesh
+    plt.pcolormesh(grid_x, grid_y, vararray)
+    plt.colorbar()
+    plt.show()
 
     # cleanup
     mf6.finalize()
