@@ -88,7 +88,7 @@ def plot_model(sim, sim_path, layer, display_text=True):
             for j in range(len(plotarrays[model_name][:, 0])):
                 for k in range(len((plotarrays[model_name][0, :]))):
                     if plotarrays[model_name][j, k] != 0.0:
-                        text = ax.text(
+                        ax.text(
                             (
                                 xgrids[model_name][j, k]
                                 + xgrids[model_name][j + 1, k + 1]
@@ -266,4 +266,3 @@ def get_bmi_data(dllpath, keys):
 
     # cleanup
     mf6.finalize()
-
