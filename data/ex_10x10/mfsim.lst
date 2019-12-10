@@ -3,7 +3,7 @@
                             VERSION 6.0.5 03/31/2019
                                ***DEVELOP MODE***
 
-   MODFLOW 6 compiled Dec 09 2019 11:29:21 with IFORT compiler (ver. 19.0.4)
+   MODFLOW 6 compiled Dec 10 2019 11:34:11 with IFORT compiler (ver. 19.0.5)
 
 This software is preliminary or provisional and is subject to 
 revision. It is being provided to meet the need for timely best 
@@ -156,7 +156,7 @@ SLN_1                     4472      2864        4.08E-02
  Allocated memory in megabytes:    7.230800E-02
  
 
- Run end date and time (yyyy/mm/dd hh:mm:ss): 2019/12/09 16:23:21
- Elapsed run time:  2.423 Seconds
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2019/12/10 12:00:43
+ Elapsed run time:  0.040 Seconds
 
  Normal termination of simulation.

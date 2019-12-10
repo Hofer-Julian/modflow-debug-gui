@@ -177,8 +177,14 @@ def get_bmi_data(dllpath, keys):
     et = ctypes.c_double(0.0)
     mf6.get_end_time(ctypes.byref(et))
 
-    # acessing exported values from dll
+    # acessing exported value from dll
     maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN")
+
+    c_var_name = ctypes.c_wchar_p("MV NPF/K11")
+    grid_id = ctypes.c_int(0)
+    mf6.get_var_grid(c_var_name, ctypes.byref(grid_id))
+    grid_id = grid_id.value
+    print(f"grid id: {grid_id}")
 
     grid_id = ctypes.c_int(0)
 
@@ -196,7 +202,7 @@ def get_bmi_data(dllpath, keys):
     # get grid size
     grid_size = ctypes.c_int(0)
     mf6.get_grid_size(grid_id, ctypes.byref(grid_size))
-    grid_size.value = grid_size.value
+    grid_size = grid_size.value
     print(f"grid size: {grid_size}")
 
     # get grid shape
@@ -238,9 +244,14 @@ def get_bmi_data(dllpath, keys):
         mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
         nsize = int(nbytes.value / elsize.value)
 
+        if key in (b"TESTJE NPF/K11", b"TESTJE NPF/K33", b"TESTJE NPF/SAT"):
+            var_dict[key]["type"] = "double"
+        elif key in (b"TESTJE NPF/ICELLTYPE",):
+            var_dict[key]["type"] = "int"
+
         # declare the receiving pointers-to-array
         var_dict[key]["array"] = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(nsize,), flags="F"
+            dtype=var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
         )()
 
     # model time loop
@@ -253,16 +264,23 @@ def get_bmi_data(dllpath, keys):
 
         for key in keys:
             # get data
-            mf6.get_value_ptr_double(
-                var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
-            )
+            if var_dict[key]["type"] == "double":
+                mf6.get_value_ptr_double(
+                    var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
+                )
+            elif var_dict[key]["type"] == "int":
+                mf6.get_value_ptr_int(
+                    var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
+                )
+
             # TODO: Check if "A" is the right option to use
             vararray = var_dict[key]["array"].contents.reshape(grid_shape, order="A")
-            print(key.decode("ASCII"), vararray)
+            print(key.decode("ASCII"), "\n", vararray)
 
-    plt.pcolormesh(grid_x, grid_y, vararray)
-    plt.colorbar()
-    plt.show()
+            if key == b"SLN_1/X":
+                plt.pcolormesh(grid_x, grid_y, vararray)
+                plt.colorbar()
+                plt.show()
 
     # cleanup
     mf6.finalize()

@@ -7,7 +7,17 @@ simpath = Path("c:/checkouts/modflow-debug-gui/data/ex_10x10")
 
 os.chdir(simpath)
 
-# var_names = [b"MV NPF/K11", b"MV NPF/K33", b"MV NPF/SAT"]
+
+# TODO_JH: Find a way to convert "SLN_1/X" -> "testje SLN_1/X"
+# without breaking functionality
+
+# Everything needs to be uppercase!
 var_names = [b"SLN_1/X"]
+var_names = [
+    b"TESTJE NPF/K11",
+    b"TESTJE NPF/K33",
+    b"TESTJE NPF/SAT",
+    b"TESTJE NPF/ICELLTYPE",
+]
 
 get_bmi_data(str(dllpath), var_names)
