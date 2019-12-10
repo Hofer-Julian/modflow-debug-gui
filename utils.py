@@ -1,13 +1,14 @@
 import numpy as np
-from matplotlib import pyplot as plt
-import flopy
 import re
-import matplotlib.patches as mpatches
 import ctypes
 from collections import defaultdict
 
 
 def plot_model(sim, sim_path, layer, display_text=True):
+
+    import matplotlib.patches as mpatches
+    import flopy
+    from matplotlib import pyplot as plt
 
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 10)
@@ -164,7 +165,7 @@ def plot_model(sim, sim_path, layer, display_text=True):
     fig.colorbar(cm, ax=ax)
 
 
-def get_bmi_data(dllpath, keys):
+def get_bmi_data(dllpath, var_names):
     print("running from mf6 dll: ", dllpath)
     mf6 = ctypes.cdll.LoadLibrary(dllpath)
 
@@ -180,13 +181,11 @@ def get_bmi_data(dllpath, keys):
     # acessing exported value from dll
     maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN")
 
-    c_var_name = ctypes.c_wchar_p("MV NPF/K11")
+    # TODO_JH: Change b"TESTJE NPF/K11" to something general
+    c_var_name = ctypes.c_char_p(b"TESTJE NPF/K11")
     grid_id = ctypes.c_int(0)
     mf6.get_var_grid(c_var_name, ctypes.byref(grid_id))
-    grid_id = grid_id.value
     print(f"grid id: {grid_id}")
-
-    grid_id = ctypes.c_int(0)
 
     # get grid type
     grid_type = ctypes.create_string_buffer(maxstrlen.value)
@@ -234,7 +233,7 @@ def get_bmi_data(dllpath, keys):
     # initialize dictionary
     var_dict = defaultdict(dict)
 
-    for key in keys:
+    for key in var_names:
         # get variable size(s)PliP
         elsize = ctypes.c_int(0)
         nbytes = ctypes.c_int(0)
@@ -244,10 +243,7 @@ def get_bmi_data(dllpath, keys):
         mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
         nsize = int(nbytes.value / elsize.value)
 
-        if key in (b"TESTJE NPF/K11", b"TESTJE NPF/K33", b"TESTJE NPF/SAT"):
-            var_dict[key]["type"] = "double"
-        elif key in (b"TESTJE NPF/ICELLTYPE",):
-            var_dict[key]["type"] = "int"
+        var_dict[key]["type"] = var_names[key]
 
         # declare the receiving pointers-to-array
         var_dict[key]["array"] = np.ctypeslib.ndpointer(
@@ -262,7 +258,7 @@ def get_bmi_data(dllpath, keys):
         # update time
         mf6.get_current_time(ctypes.byref(ct))
 
-        for key in keys:
+        for key in var_names:
             # get data
             if var_dict[key]["type"] == "double":
                 mf6.get_value_ptr_double(
@@ -274,10 +270,13 @@ def get_bmi_data(dllpath, keys):
                 )
 
             # TODO: Check if "A" is the right option to use
-            vararray = var_dict[key]["array"].contents.reshape(grid_shape, order="A")
+            # vararray = var_dict[key]["array"].contents.reshape(grid_shape, order="A")
+            vararray = var_dict[key]["array"].contents
             print(key.decode("ASCII"), "\n", vararray)
 
             if key == b"SLN_1/X":
+                from matplotlib import pyplot as plt
+
                 plt.pcolormesh(grid_x, grid_y, vararray)
                 plt.colorbar()
                 plt.show()

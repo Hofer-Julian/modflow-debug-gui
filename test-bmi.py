@@ -12,12 +12,13 @@ os.chdir(simpath)
 # without breaking functionality
 
 # Everything needs to be uppercase!
-var_names = [b"SLN_1/X"]
-var_names = [
-    b"TESTJE NPF/K11",
-    b"TESTJE NPF/K33",
-    b"TESTJE NPF/SAT",
-    b"TESTJE NPF/ICELLTYPE",
-]
+# var_names = [b"SLN_1/X"]
+var_names = {
+    b"TESTJE NPF/K11": "double",
+    b"TESTJE NPF/K33": "double",
+    b"TESTJE NPF/SAT": "double",
+    b"TESTJE NPF/ICELLTYPE": "int",
+    b"TESTJE DIS/MSHAPE": "int",
+}
 
 get_bmi_data(str(dllpath), var_names)
