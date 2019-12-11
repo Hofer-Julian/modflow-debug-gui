@@ -1,0 +1,11 @@
+BEGIN OPTIONS
+END OPTIONS
+
+BEGIN PACKAGES
+  DIS6 .\testje\testje.dis
+  IC6 .\testje\testje.ic
+  NPF6 .\testje\testje.npf
+  OC6 .\testje\testje.oc
+  CHD6 .\testje\testje.chd
+  WEL6 .\testje\testje.wel
+END PACKAGES

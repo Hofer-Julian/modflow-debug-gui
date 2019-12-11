@@ -2,7 +2,6 @@ import numpy as np
 import re
 import ctypes
 from collections import defaultdict
-import os
 
 
 def plot_model(sim, sim_path, layer, display_text=True):
@@ -168,9 +167,6 @@ def plot_model(sim, sim_path, layer, display_text=True):
 
 def get_bmi_data(dllpath, var_names):
 
-    print("Process id: ", os.getpid())
-    input("Press Enter to continue...")
-
     print("running from mf6 dll: ", dllpath)
     mf6 = ctypes.cdll.LoadLibrary(dllpath)
 
@@ -184,7 +180,7 @@ def get_bmi_data(dllpath, var_names):
     mf6.get_end_time(ctypes.byref(et))
 
     # acessing exported value from dll
-    maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN")
+    maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN").value
 
     # TODO_JH: Change b"TESTJE NPF/K11" to something general
     c_var_name = ctypes.c_char_p(b"TESTJE NPF/K11")
@@ -193,7 +189,7 @@ def get_bmi_data(dllpath, var_names):
     print(f"grid id: {grid_id.value}")
 
     # get grid type
-    grid_type = ctypes.create_string_buffer(maxstrlen.value)
+    grid_type = ctypes.create_string_buffer(maxstrlen)
     mf6.get_grid_type(ctypes.byref(grid_id), grid_type)
     print(f"grid type: {grid_type.value.decode('ASCII')}")
 
@@ -237,9 +233,8 @@ def get_bmi_data(dllpath, var_names):
 
     # initialize dictionary
     var_dict = defaultdict(dict)
-
     for key in var_names:
-        # get variable size(s)PliP
+        # get variable size(s)
         elsize = ctypes.c_int(0)
         nbytes = ctypes.c_int(0)
         var_dict[key]["name"] = ctypes.c_char_p(key)
@@ -254,12 +249,10 @@ def get_bmi_data(dllpath, var_names):
         var_dict[key]["array"] = np.ctypeslib.ndpointer(
             dtype=var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
         )()
-
     # model time loop
     while ct.value < et.value:
         # calculate
         mf6.update()
-
         # update time
         mf6.get_current_time(ctypes.byref(ct))
 
@@ -274,15 +267,14 @@ def get_bmi_data(dllpath, var_names):
                     var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
                 )
 
-            # TODO: Check if "A" is the right option to use
-            # vararray = var_dict[key]["array"].contents.reshape(grid_shape, order="A")
             vararray = var_dict[key]["array"].contents
-            print(key.decode("ASCII"), "\n", vararray)
 
             if key == b"SLN_1/X":
                 from matplotlib import pyplot as plt
 
-                plt.pcolormesh(grid_x, grid_y, vararray)
+                print(f"grid x: {grid_x}")
+                # TODO: Check if "A" is the right option to use
+                plt.pcolormesh(grid_x, grid_y, vararray.reshape(grid_shape, order="A"))
                 plt.colorbar()
                 plt.show()
 

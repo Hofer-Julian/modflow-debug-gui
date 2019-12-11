@@ -12,13 +12,20 @@ os.chdir(simpath)
 # without breaking functionality
 
 # Everything needs to be uppercase!
-# var_names = [b"SLN_1/X"]
-var_names = {
-    b"TESTJE NPF/K11": "double",
-    b"TESTJE NPF/K33": "double",
-    b"TESTJE NPF/SAT": "double",
-    b"TESTJE NPF/ICELLTYPE": "int",
-    b"TESTJE DIS/AREA": "double",
-}
+
+
+print("Process id: ", os.getpid())
+x = input("Enter 1 for plotting, something else for debugging: ")
+
+if x == "1":
+    var_names = {b"SLN_1/X": "double"}
+else:
+    var_names = {
+        b"TESTJE NPF/K11": "double",
+        b"TESTJE NPF/K33": "double",
+        b"TESTJE NPF/SAT": "double",
+        b"TESTJE NPF/ICELLTYPE": "int",
+        b"TESTJE DIS/AREA": "double",
+    }
 
 get_bmi_data(str(dllpath), var_names)
