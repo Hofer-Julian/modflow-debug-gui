@@ -18,7 +18,7 @@ var_names = {
     b"TESTJE NPF/K33": "double",
     b"TESTJE NPF/SAT": "double",
     b"TESTJE NPF/ICELLTYPE": "int",
-    b"TESTJE DIS/MSHAPE": "int",
+    b"TESTJE DIS/AREA": "double",
 }
 
 get_bmi_data(str(dllpath), var_names)

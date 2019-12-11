@@ -2,6 +2,7 @@ import numpy as np
 import re
 import ctypes
 from collections import defaultdict
+import os
 
 
 def plot_model(sim, sim_path, layer, display_text=True):
@@ -166,6 +167,10 @@ def plot_model(sim, sim_path, layer, display_text=True):
 
 
 def get_bmi_data(dllpath, var_names):
+
+    print("Process id: ", os.getpid())
+    input("Press Enter to continue...")
+
     print("running from mf6 dll: ", dllpath)
     mf6 = ctypes.cdll.LoadLibrary(dllpath)
 
@@ -185,22 +190,22 @@ def get_bmi_data(dllpath, var_names):
     c_var_name = ctypes.c_char_p(b"TESTJE NPF/K11")
     grid_id = ctypes.c_int(0)
     mf6.get_var_grid(c_var_name, ctypes.byref(grid_id))
-    print(f"grid id: {grid_id}")
+    print(f"grid id: {grid_id.value}")
 
     # get grid type
     grid_type = ctypes.create_string_buffer(maxstrlen.value)
-    mf6.get_grid_type(grid_id, grid_type)
+    mf6.get_grid_type(ctypes.byref(grid_id), grid_type)
     print(f"grid type: {grid_type.value.decode('ASCII')}")
 
     # get grid rank
     grid_rank = ctypes.c_int(0)
-    mf6.get_grid_rank(grid_id, ctypes.byref(grid_rank))
+    mf6.get_grid_rank(ctypes.byref(grid_id), ctypes.byref(grid_rank))
     grid_rank = grid_rank.value
     print(f"grid rank: {grid_rank}")
 
     # get grid size
     grid_size = ctypes.c_int(0)
-    mf6.get_grid_size(grid_id, ctypes.byref(grid_size))
+    mf6.get_grid_size(ctypes.byref(grid_id), ctypes.byref(grid_size))
     grid_size = grid_size.value
     print(f"grid size: {grid_size}")
 
@@ -208,7 +213,7 @@ def get_bmi_data(dllpath, var_names):
     grid_shape = np.ctypeslib.ndpointer(
         dtype="int", ndim=1, shape=(grid_rank,), flags="F"
     )()
-    mf6.get_grid_shape(grid_id, ctypes.byref(grid_shape))
+    mf6.get_grid_shape(ctypes.byref(grid_id), ctypes.byref(grid_shape))
     grid_shape = grid_shape.contents
     print(f"grid shape: {grid_shape}")
 
@@ -216,7 +221,7 @@ def get_bmi_data(dllpath, var_names):
     grid_x = np.ctypeslib.ndpointer(
         dtype="double", ndim=1, shape=(grid_shape[-1],), flags="F"
     )()
-    mf6.get_grid_x(grid_id, ctypes.byref(grid_x))
+    mf6.get_grid_x(ctypes.byref(grid_id), ctypes.byref(grid_x))
     grid_x = grid_x.contents
     print(f"grid x: {grid_x}")
 
@@ -224,7 +229,7 @@ def get_bmi_data(dllpath, var_names):
     grid_y = np.ctypeslib.ndpointer(
         dtype="double", ndim=1, shape=(grid_shape[-2],), flags="F"
     )()
-    mf6.get_grid_y(grid_id, ctypes.byref(grid_y))
+    mf6.get_grid_y(ctypes.byref(grid_id), ctypes.byref(grid_y))
     grid_y = grid_y.contents
     print(f"grid y: {grid_y}")
 
