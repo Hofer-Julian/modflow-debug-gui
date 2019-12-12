@@ -4,7 +4,7 @@ import sys
 
 
 if __name__ == "__main__":
-    qapp = QtWidgets.QApplication(sys.argv)
-    app = ApplicationWindow()
-    app.show()
-    qapp.exec_()
+    app = QtWidgets.QApplication(sys.argv)
+    window = ApplicationWindow()
+    window.show()
+    sys.exit(app.exec_())
