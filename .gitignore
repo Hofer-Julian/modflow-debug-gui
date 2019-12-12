@@ -1,3 +1,7 @@
+# Modflow output files
+*.lst
+*.hds
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
