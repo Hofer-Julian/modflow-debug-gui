@@ -60,10 +60,3 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # Shift the sinusoid as a function of time.
         self._dynamic_ax.plot(t, np.sin(t + time.time()))
         self._dynamic_ax.figure.canvas.draw()
-
-
-if __name__ == "__main__":
-    qapp = QtWidgets.QApplication(sys.argv)
-    app = ApplicationWindow()
-    app.show()
-    qapp.exec_()
