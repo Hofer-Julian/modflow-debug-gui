@@ -1,120 +1,74 @@
-import numpy as np
-import ctypes
-from collections import defaultdict
-from matplotlib import pyplot as plt
+from PyQt5.QtCore import QRunnable, QObject, pyqtSignal, pyqtSlot
+import traceback
+import sys
 
 
-def get_bmi_data(dllpath, var_names):
+class WorkerSignals(QObject):
+    """
+    Defines the signals available from a running worker thread.
 
-    print("running from mf6 dll: ", dllpath)
-    mf6 = ctypes.cdll.LoadLibrary(dllpath)
+    Supported signals are:
 
-    # initialize the model
-    mf6.initialize()
+    finished
+        No data
 
-    # get times
-    ct = ctypes.c_double(0.0)
-    mf6.get_current_time(ctypes.byref(ct))
-    et = ctypes.c_double(0.0)
-    mf6.get_end_time(ctypes.byref(et))
+    error
+        `tuple` (exctype, value, traceback.format_exc() )
 
-    # acessing exported value from dll
-    maxstrlen = ctypes.c_int.in_dll(mf6, "MAXSTRLEN").value
+    result
+        `object` data returned from processing, anything
 
-    # TODO_JH: Change b"TESTJE NPF/K11" to something general
-    c_var_name = ctypes.c_char_p(b"TESTJE NPF/K11")
-    grid_id = ctypes.c_int(0)
-    mf6.get_var_grid(c_var_name, ctypes.byref(grid_id))
-    print(f"grid id: {grid_id.value}")
+    progress
+        `int` indicating % progress
 
-    # get grid type
-    grid_type = ctypes.create_string_buffer(maxstrlen)
-    mf6.get_grid_type(ctypes.byref(grid_id), grid_type)
-    print(f"grid type: {grid_type.value.decode('ASCII')}")
+    """
 
-    # get grid rank
-    grid_rank = ctypes.c_int(0)
-    mf6.get_grid_rank(ctypes.byref(grid_id), ctypes.byref(grid_rank))
-    grid_rank = grid_rank.value
-    print(f"grid rank: {grid_rank}")
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
+    progress = pyqtSignal(int)
 
-    # get grid size
-    grid_size = ctypes.c_int(0)
-    mf6.get_grid_size(ctypes.byref(grid_id), ctypes.byref(grid_size))
-    grid_size = grid_size.value
-    print(f"grid size: {grid_size}")
 
-    # get grid shape
-    grid_shape = np.ctypeslib.ndpointer(
-        dtype="int", ndim=1, shape=(grid_rank,), flags="F"
-    )()
-    mf6.get_grid_shape(ctypes.byref(grid_id), ctypes.byref(grid_shape))
-    grid_shape = grid_shape.contents
-    print(f"grid shape: {grid_shape}")
+class Worker(QRunnable):
+    """
+    Worker thread
 
-    # get grid x
-    grid_x = np.ctypeslib.ndpointer(
-        dtype="double", ndim=1, shape=(grid_shape[-1],), flags="F"
-    )()
-    mf6.get_grid_x(ctypes.byref(grid_id), ctypes.byref(grid_x))
-    grid_x = grid_x.contents
-    print(f"grid x: {grid_x}")
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
 
-    # get grid y
-    grid_y = np.ctypeslib.ndpointer(
-        dtype="double", ndim=1, shape=(grid_shape[-2],), flags="F"
-    )()
-    mf6.get_grid_y(ctypes.byref(grid_id), ctypes.byref(grid_y))
-    grid_y = grid_y.contents
-    print(f"grid y: {grid_y}")
+    :param callback: The function callback to run on this worker thread. Supplied args and
+                     kwargs will be passed through to the runner.
+    :type callback: function
+    :param args: Arguments to pass to the callback function
+    :param kwargs: Keywords to pass to the callback function
 
-    # get grid z would be grid_shape.contents[-3]
+    """
 
-    # initialize dictionary
-    var_dict = defaultdict(dict)
-    for key in var_names:
-        # get variable size(s)
-        elsize = ctypes.c_int(0)
-        nbytes = ctypes.c_int(0)
-        var_dict[key]["name"] = ctypes.c_char_p(key)
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
 
-        mf6.get_var_itemsize(var_dict[key]["name"], ctypes.byref(elsize))
-        mf6.get_var_nbytes(var_dict[key]["name"], ctypes.byref(nbytes))
-        nsize = int(nbytes.value / elsize.value)
+        # Store constructor arguments (re-used for processing)
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
 
-        var_dict[key]["type"] = var_names[key]
+        # Add the callback to our kwargs
+        self.kwargs["progress_callback"] = self.signals.progress
 
-        # declare the receiving pointers-to-array
-        var_dict[key]["array"] = np.ctypeslib.ndpointer(
-            dtype=var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
-        )()
-    # model time loop
-    while ct.value < et.value:
-        # calculate
-        mf6.update()
-        # update time
-        mf6.get_current_time(ctypes.byref(ct))
+    @pyqtSlot()
+    def run(self):
+        """
+        Initialise the runner function with passed args, kwargs.
+        """
 
-        for key in var_names:
-            # get data
-            if var_dict[key]["type"] == "double":
-                mf6.get_value_ptr_double(
-                    var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
-                )
-            elif var_dict[key]["type"] == "int":
-                mf6.get_value_ptr_int(
-                    var_dict[key]["name"], ctypes.byref(var_dict[key]["array"])
-                )
-
-            vararray = var_dict[key]["array"].contents
-
-            if key == b"SLN_1/X":
-
-                print(f"grid x: {grid_x}")
-                # TODO: Check if "A" is the right option to use
-                plt.pcolormesh(grid_x, grid_y, vararray.reshape(grid_shape, order="A"))
-                plt.colorbar()
-                plt.show()
-
-    # cleanup
-    mf6.finalize()
+        # Retrieve args/kwargs here; and fire processing using them
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)  # Return the result of the processing
+        finally:
+            self.signals.finished.emit()  # Done

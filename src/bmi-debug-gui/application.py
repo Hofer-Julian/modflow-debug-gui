@@ -9,24 +9,19 @@ example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
 "Qt5Agg", or by first importing the desired version of PyQt.
 """
 
-import sys
 import time
 
 import numpy as np
 
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
-from matplotlib.figure import Figure
 
-if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas,
-        NavigationToolbar2QT as NavigationToolbar,
-    )
-else:
-    from matplotlib.backends.backend_qt4agg import (
-        FigureCanvas,
-        NavigationToolbar2QT as NavigationToolbar,
-    )
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar,
+)
+
+from bmi_data import BMIState
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -36,34 +31,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self._main)
         layout = QtWidgets.QVBoxLayout(self._main)
 
-        static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        layout.addWidget(static_canvas)
-        self.addToolBar(NavigationToolbar(static_canvas, self))
-
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
         self.addToolBar(
-            QtCore.Qt.BottomToolBarArea, NavigationToolbar(dynamic_canvas, self)
+            QtCore.Qt.TopToolBarArea, NavigationToolbar(dynamic_canvas, self)
         )
 
-        self._static_ax = static_canvas.figure.subplots()
-        t = np.linspace(0, 10, 501)
-        self._static_ax.plot(t, np.tan(t), ".")
-
         self._dynamic_ax = dynamic_canvas.figure.subplots()
-        self._timer = dynamic_canvas.new_timer(100, [(self._update_canvas, (), {})])
-        self._timer.start()
+        button_continue = QtWidgets.QPushButton("Continue time loop")
+        button_continue.pressed.connect(self._update_canvas)
+        layout.addWidget(button_continue)
+
+        self.bmistate = BMIState()
 
     def _update_canvas(self):
         self._dynamic_ax.clear()
         t = np.linspace(0, 10, 101)
         # Shift the sinusoid as a function of time.
         self._dynamic_ax.plot(t, np.sin(t + time.time()))
+        # self.bmistate.advance_time_loop(self._dynamic_ax)
         self._dynamic_ax.figure.canvas.draw()
-
-
-if __name__ == "__main__":
-    qapp = QtWidgets.QApplication(sys.argv)
-    app = ApplicationWindow()
-    app.show()
-    qapp.exec_()
