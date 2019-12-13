@@ -9,10 +9,6 @@ example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
 "Qt5Agg", or by first importing the desired version of PyQt.
 """
 
-import time
-
-import numpy as np
-
 
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.figure import Figure
@@ -21,7 +17,9 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar,
 )
 
-from bmi_data import BMIState
+from bmi_data import BMI
+from PyQt5.QtCore import QThreadPool
+from utils import Worker
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -31,23 +29,41 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self._main)
         layout = QtWidgets.QVBoxLayout(self._main)
 
-        dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        layout.addWidget(dynamic_canvas)
+        figure_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        layout.addWidget(figure_canvas)
         self.addToolBar(
-            QtCore.Qt.TopToolBarArea, NavigationToolbar(dynamic_canvas, self)
+            QtCore.Qt.TopToolBarArea, NavigationToolbar(figure_canvas, self)
         )
 
-        self._dynamic_ax = dynamic_canvas.figure.subplots()
+        self.fig = figure_canvas.figure
+        self.ax = self.fig.subplots()
+        # self.colorbar = self.fig.colorbar(pc, ax=ax)
+
         button_continue = QtWidgets.QPushButton("Continue time loop")
-        button_continue.pressed.connect(self._update_canvas)
+        button_continue.pressed.connect(self.button_pressed)
         layout.addWidget(button_continue)
 
-        self.bmistate = BMIState()
+        self.bmi = BMI()
+        self.threadpool = QThreadPool()
+        # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
+        self.threadpool.setMaxThreadCount(1)
 
-    def _update_canvas(self):
-        self._dynamic_ax.clear()
-        t = np.linspace(0, 10, 101)
-        # Shift the sinusoid as a function of time.
-        self._dynamic_ax.plot(t, np.sin(t + time.time()))
-        # self.bmistate.advance_time_loop(self._dynamic_ax)
-        self._dynamic_ax.figure.canvas.draw()
+    def closeEvent(self, event):
+        self.bmi.mf6_dll.finalize()
+        event.accept()
+
+    def button_pressed(self):
+        if self.bmi.ct.value < self.bmi.et.value:
+            worker = Worker(self.bmi.advance_time_loop, self.ax, self.fig)
+            worker.signals.result.connect(self.draw_canvas)
+            self.threadpool.start(worker)
+
+    def draw_canvas(self, args):
+        (grid_x, grid_y, head_values) = args
+        self.ax.clear()
+        pc = self.ax.pcolormesh(grid_x, grid_y, head_values)
+        if hasattr(self, "colorbar"):
+            self.colorbar.update_normal(pc)
+        else:
+            self.colorbar = self.fig.colorbar(pc, ax=self.ax)
+        self.ax.figure.canvas.draw()
