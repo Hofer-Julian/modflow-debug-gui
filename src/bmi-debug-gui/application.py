@@ -37,7 +37,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.fig = figure_canvas.figure
         self.ax = self.fig.subplots()
-        # self.colorbar = self.fig.colorbar(pc, ax=ax)
 
         button_continue = QtWidgets.QPushButton("Continue time loop")
         button_continue.pressed.connect(self.button_pressed)

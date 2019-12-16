@@ -1,4 +1,5 @@
 {
     "editor.formatOnSave": true,
     "python.pythonPath": "C:\\Users\\hofer_jn\\AppData\\Local\\Continuum\\anaconda3\\python.exe",
+    "python.linting.enabled": true,
 }

@@ -1,5 +1,5 @@
 BEGIN OPTIONS
-  HEAD FILEOUT .\testje\heads\testje.hds
+  HEAD FILEOUT .\testje.hds
 END OPTIONS
 
 BEGIN PERIOD 1

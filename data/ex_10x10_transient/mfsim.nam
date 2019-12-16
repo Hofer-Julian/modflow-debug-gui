@@ -7,7 +7,7 @@ BEGIN TIMING
 END TIMING
 
 BEGIN MODELS
-	GWF6 testje/testje.nam testje
+	GWF6 testje.nam testje
 END MODELS
 
 BEGIN EXCHANGES

@@ -63,7 +63,7 @@ class BMI:
 
         # get grid x
         grid_x = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(self.grid_shape[-1],), flags="F"
+            dtype="double", ndim=1, shape=(self.grid_shape[-1] + 1,), flags="F"
         )()
         self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
         self.grid_x = grid_x.contents
@@ -71,7 +71,7 @@ class BMI:
 
         # get grid y
         grid_y = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(self.grid_shape[-2],), flags="F"
+            dtype="double", ndim=1, shape=(self.grid_shape[-2] + 1,), flags="F"
         )()
         self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
         self.grid_y = grid_y.contents
