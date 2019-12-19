@@ -27,10 +27,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super().__init__()
         self._main = QtWidgets.QWidget()
         self.setCentralWidget(self._main)
-        layout = QtWidgets.QVBoxLayout(self._main)
+        main_layout = QtWidgets.QVBoxLayout(self._main)
 
         figure_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        layout.addWidget(figure_canvas)
+        main_layout.addWidget(figure_canvas)
         self.addToolBar(
             QtCore.Qt.TopToolBarArea, NavigationToolbar(figure_canvas, self)
         )
@@ -39,8 +39,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ax = self.fig.subplots()
 
         button_continue = QtWidgets.QPushButton("Continue time loop")
-        button_continue.pressed.connect(self.button_pressed)
-        layout.addWidget(button_continue)
+        button_continue.pressed.connect(self.button_continue_pressed)
+        main_layout.addWidget(button_continue)
+
+        inner_layout = QtWidgets.QHBoxLayout(self._main)
+        main_layout.addLayout(inner_layout)
+
+        self.input_widget = QtWidgets.QLineEdit()
+        self.input_widget.setPlaceholderText("Input variable name")
+        self.input_widget.textChanged.connect(self.input_widget_textChanged)
+
+        self.combo_box = QtWidgets.QComboBox()
+        self.combo_box.addItems(["double", "int"])
+
+        self.button_get_value = QtWidgets.QPushButton("Get value")
+        self.button_get_value.setEnabled(False)
+        self.button_get_value.pressed.connect(self.button_get_value_pressed)
+
+        inner_layout.addWidget(self.input_widget)
+        inner_layout.addWidget(self.combo_box)
+        inner_layout.addWidget(self.button_get_value)
 
         self.bmi = BMI()
         self.threadpool = QThreadPool()
@@ -51,11 +69,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.bmi.mf6_dll.finalize()
         event.accept()
 
-    def button_pressed(self):
+    def button_continue_pressed(self):
         if self.bmi.ct.value < self.bmi.et.value:
             worker = Worker(self.bmi.advance_time_loop, self.ax, self.fig)
             worker.signals.result.connect(self.draw_canvas)
             self.threadpool.start(worker)
+
+    def button_get_value_pressed(self):
+        worker = Worker(
+            self.bmi.get_value, self.input_widget.text(), self.combo_box.currentText()
+        )
+        worker.signals.result.connect(lambda x: x)
+        self.threadpool.start(worker)
+
+    def input_widget_textChanged(self):
+        if len(self.input_widget.text()):
+            self.button_get_value.setEnabled(True)
+        else:
+            self.button_get_value.setEnabled(False)
 
     def draw_canvas(self, args):
         (grid_x, grid_y, head_values) = args

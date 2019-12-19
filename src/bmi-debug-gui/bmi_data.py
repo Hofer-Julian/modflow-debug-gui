@@ -102,6 +102,31 @@ class BMI:
                 dtype=self.var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
             )()
 
+    def get_value(self, value_name, value_type):
+        name = ctypes.c_char_p(value_name.encode())
+
+        elsize = ctypes.c_int(0)
+        nbytes = ctypes.c_int(0)
+
+        self.mf6_dll.get_var_itemsize(name, ctypes.byref(elsize))
+        self.mf6_dll.get_var_nbytes(name, ctypes.byref(nbytes))
+        nsize = int(nbytes.value / elsize.value)
+
+        array = np.ctypeslib.ndpointer(
+            dtype=value_type, ndim=1, shape=(nsize,), flags="F"
+        )()
+
+        if value_type == "double":
+            self.mf6_dll.get_value_ptr_double(name, ctypes.byref(array))
+        elif value_type == "int":
+            self.mf6_dll.get_value_ptr_int(name, ctypes.byref(array))
+        else:
+            raise ValueError("The type is neither double nor int")
+
+        values = array.contents
+        print(values)
+        return ()
+
     def advance_time_loop(self, ax, figure):
 
         # calculate
@@ -121,6 +146,8 @@ class BMI:
                     self.var_dict[key]["name"],
                     ctypes.byref(self.var_dict[key]["array"]),
                 )
+            else:
+                raise ValueError("The type is neither double nor int")
 
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
