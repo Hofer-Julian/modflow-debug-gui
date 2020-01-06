@@ -40,6 +40,8 @@ class BMI:
             match = re.search(r"\s(\w+)\nEND Models", content)
             if match:
                 model_name = match.group(1)
+            else:
+                raise Exception("The model name could not be parsed")
 
         c_var_name = ctypes.c_char_p((model_name + " NPF/K11").encode())
         self.grid_id = ctypes.c_int(0)
