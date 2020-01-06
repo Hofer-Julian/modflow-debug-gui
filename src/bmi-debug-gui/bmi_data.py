@@ -3,6 +3,7 @@ import ctypes
 import numpy as np
 from collections import defaultdict
 import os
+import re
 
 
 class BMI:
@@ -10,7 +11,9 @@ class BMI:
         self.dllpath = Path(
             "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
         )
-        self.simpath = Path("c:/checkouts/modflow-debug-gui/data/ex_10x10_transient")
+        self.simpath = Path(
+            "c:/checkouts/modflow-debug-gui/data/test030_hani_xt3d_disu"
+        )
         self.var_names = {b"SLN_1/X": "double"}
         self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
 
@@ -28,8 +31,17 @@ class BMI:
         # acessing exported value from dll
         self.maxstrlen = ctypes.c_int.in_dll(self.mf6_dll, "MAXSTRLEN").value
 
-        # TODO_JH: Change b"TESTJE NPF/K11" to something general
-        c_var_name = ctypes.c_char_p(b"TESTJE NPF/K11")
+        # TODO_JH: Find a better way to get the grid_id
+        # then parsing the model_name from the mfsim.nam file
+        # and then searching for the grid_id of a specific parameter
+        # this additionally only works when only one model is present
+        with open(self.simpath / "mfsim.nam", "r") as namefile:
+            content = namefile.read()
+            match = re.search(r"\s(\w+)\nEND Models", content)
+            if match:
+                model_name = match.group(1)
+
+        c_var_name = ctypes.c_char_p((model_name + " NPF/K11").encode())
         self.grid_id = ctypes.c_int(0)
         self.mf6_dll.get_var_grid(c_var_name, ctypes.byref(self.grid_id))
         print(f"grid id: {self.grid_id.value}")
