@@ -51,7 +51,8 @@ class BMI:
         # get grid type
         self.grid_type = ctypes.create_string_buffer(self.maxstrlen)
         self.mf6_dll.get_grid_type(ctypes.byref(self.grid_id), self.grid_type)
-        print(f"grid type: {self.grid_type.value.decode('ASCII')}")
+        self.grid_type = self.grid_type.value.decode("ASCII")
+        print(f"grid type: {self.grid_type}")
 
         # get grid rank
         grid_rank = ctypes.c_int(0)
@@ -65,33 +66,46 @@ class BMI:
         self.grid_size = grid_size.value
         print(f"grid size: {self.grid_size}")
 
-        # get grid shape
-        grid_shape = np.ctypeslib.ndpointer(
-            dtype="int", ndim=1, shape=(self.grid_rank,), flags="F"
-        )()
-        self.mf6_dll.get_grid_shape(
-            ctypes.byref(self.grid_id), ctypes.byref(grid_shape)
-        )
-        self.grid_shape = grid_shape.contents
-        print(f"grid shape: {self.grid_shape}")
+        if self.grid_type in (
+            "uniform rectilinear",
+            "rectilinear",
+            "structured quadrilaterals",
+        ):
+            # get grid shape
+            grid_shape = np.ctypeslib.ndpointer(
+                dtype="int", ndim=1, shape=(self.grid_rank,), flags="F"
+            )()
+            self.mf6_dll.get_grid_shape(
+                ctypes.byref(self.grid_id), ctypes.byref(grid_shape)
+            )
+            self.grid_shape = grid_shape.contents
+            print(f"grid shape: {self.grid_shape}")
 
-        # get grid x
-        grid_x = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(self.grid_shape[-1] + 1,), flags="F"
-        )()
-        self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
-        self.grid_x = grid_x.contents
-        print(f"grid x: {self.grid_x}")
+        # get grid_x, grid_y and grid_z
+        if self.grid_type == "rectilinear":
+            grid_x = np.ctypeslib.ndpointer(
+                dtype="double", ndim=1, shape=(self.grid_shape[-1] + 1,), flags="F"
+            )()
+            self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
+            self.grid_x = grid_x.contents
+            print(f"grid x: {self.grid_x}")
 
-        # get grid y
-        grid_y = np.ctypeslib.ndpointer(
-            dtype="double", ndim=1, shape=(self.grid_shape[-2] + 1,), flags="F"
-        )()
-        self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
-        self.grid_y = grid_y.contents
-        print(f"grid y: {self.grid_y}")
+            grid_y = np.ctypeslib.ndpointer(
+                dtype="double", ndim=1, shape=(self.grid_shape[-2] + 1,), flags="F"
+            )()
+            self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
+            self.grid_y = grid_y.contents
+            print(f"grid y: {self.grid_y}")
 
-        # get grid z would be grid_shape.contents[-3]
+            if len(grid_shape) == 3:
+                grid_z = np.ctypeslib.ndpointer(
+                    dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
+                )()
+                self.mf6_dll.get_grid_z(ctypes.byref(self.grid_id), ctypes.byref(grid_z))
+                self.grid_z = grid_z.contents
+                print(f"grid z: {self.grid_z}")
+        elif self.grid_type in ("structured quadrilaterals", "unstructured"):
+            pass
 
         # initialize dictionary
         self.var_dict = defaultdict(dict)
