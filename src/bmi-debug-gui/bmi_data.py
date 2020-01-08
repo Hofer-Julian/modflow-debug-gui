@@ -105,7 +105,21 @@ class BMI:
                 self.grid_z = grid_z.contents
                 print(f"grid z: {self.grid_z}")
         elif self.grid_type in ("structured quadrilaterals", "unstructured"):
-            pass
+            grid_x = np.ctypeslib.ndpointer(
+                dtype="double", ndim=1, shape=(self.grid_size,), flags="F"
+            )()
+            self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
+            self.grid_x = grid_x.contents
+            print(f"grid x: {self.grid_x}")
+
+            grid_y = np.ctypeslib.ndpointer(
+                dtype="double", ndim=1, shape=(self.grid_size,), flags="F"
+            )()
+            self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
+            self.grid_y = grid_y.contents
+            print(f"grid y: {self.grid_y}")
+
+            # TODO_JH: Find out how to determine if grid_z exists.
 
         # initialize dictionary
         self.var_dict = defaultdict(dict)
