@@ -54,11 +54,6 @@ class BMI:
         self.grid_type = self.grid_type.value.decode("ASCII")
         print(f"grid type: {self.grid_type}")
 
-        # get grid rank
-        grid_rank = ctypes.c_int(0)
-        self.mf6_dll.get_grid_rank(ctypes.byref(self.grid_id), ctypes.byref(grid_rank))
-        self.grid_rank = grid_rank.value
-        print(f"grid rank: {self.grid_rank}")
 
         # get grid size
         grid_size = ctypes.c_int(0)
@@ -71,6 +66,12 @@ class BMI:
             "rectilinear",
             "structured quadrilaterals",
         ):
+            # get grid rank
+            grid_rank = ctypes.c_int(0)
+            self.mf6_dll.get_grid_rank(ctypes.byref(self.grid_id), ctypes.byref(grid_rank))
+            self.grid_rank = grid_rank.value
+            print(f"grid rank: {self.grid_rank}")
+
             # get grid shape
             grid_shape = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(self.grid_rank,), flags="F"
@@ -119,14 +120,40 @@ class BMI:
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
 
-            # TODO_JH: Find out how to determine if grid_z exists.
+            # TODO_JH: Implement get_grid_ramk for unstructured grids in order to determine if grid_z exists.
 
         if self.grid_type == "unstructured":
+            # get grid_node_count (node in BMI-context means vertex in Modflow context)
+            grid_node_count = ctypes.c_int(0)
+            self.mf6_dll.get_grid_node_count(ctypes.byref(self.grid_id), ctypes.byref(grid_node_count))
+            self.grid_node_count = grid_node_count.value
+            print(f"grid_node_count: {self.grid_node_count}")
+
             # get grid_face_count
             grid_face_count = ctypes.c_int(0)
             self.mf6_dll.get_grid_face_count(ctypes.byref(self.grid_id), ctypes.byref(grid_face_count))
             self.grid_face_count = grid_face_count.value
             print(f"grid_face_count: {self.grid_face_count}")
+
+            # get grid_node_per_face
+            nodes_per_face = np.ctypeslib.ndpointer(
+                dtype="int", ndim=1, shape=(self.grid_face_count,), flags="F"
+            )()
+            self.mf6_dll.get_grid_nodes_per_face(ctypes.byref(self.grid_id), ctypes.byref(nodes_per_face))
+            self.nodes_per_face = nodes_per_face.contents
+            print(f"nodes_per_face: {self.nodes_per_face}")
+
+            # get grid_face_nodes
+            face_nodes_size = np.sum(self.nodes_per_face + 1)
+            face_nodes = np.ctypeslib.ndpointer(
+                dtype="int", ndim=1, shape=(face_nodes_size,), flags="F"
+            )()
+            self.mf6_dll.get_grid_face_nodes(ctypes.byref(self.grid_id), ctypes.byref(face_nodes))
+            self.face_nodes = face_nodes.contents
+            print(f"face_nodes: {self.face_nodes}")
+
+
+
 
         # initialize dictionary
         self.var_dict = defaultdict(dict)
