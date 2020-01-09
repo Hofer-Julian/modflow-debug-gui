@@ -37,9 +37,9 @@ class BMI:
         # this additionally only works when only one model is present
         with open(self.simpath / "mfsim.nam", "r") as namefile:
             content = namefile.read()
-            match = re.search(r"\s(\w+)\nEND Models", content)
+            match = re.search(r"\s(\w+)\nEND MODELS", content)
             if match:
-                model_name = match.group(1)
+                model_name = match.group(1).upper()
             else:
                 raise Exception("The model name could not be parsed")
 
@@ -120,6 +120,13 @@ class BMI:
             print(f"grid y: {self.grid_y}")
 
             # TODO_JH: Find out how to determine if grid_z exists.
+
+        if self.grid_type == "unstructured":
+            # get grid_face_count
+            grid_face_count = ctypes.c_int(0)
+            self.mf6_dll.get_grid_face_count(ctypes.byref(self.grid_id), ctypes.byref(grid_face_count))
+            self.grid_face_count = grid_face_count.value
+            print(f"grid_face_count: {self.grid_face_count}")
 
         # initialize dictionary
         self.var_dict = defaultdict(dict)

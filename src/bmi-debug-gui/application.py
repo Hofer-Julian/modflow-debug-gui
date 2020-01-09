@@ -42,6 +42,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         button_continue.pressed.connect(self.button_continue_pressed)
         main_layout.addWidget(button_continue)
 
+        # TODO_JH: Fix erro message "Attempting to add QLayout "" to QWidget "", which already has a layout"
         inner_layout = QtWidgets.QHBoxLayout(self._main)
         main_layout.addLayout(inner_layout)
 
