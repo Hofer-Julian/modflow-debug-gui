@@ -11,9 +11,7 @@ class BMI:
         self.dllpath = Path(
             "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
         )
-        self.simpath = Path(
-            "c:/checkouts/modflow-debug-gui/data/ex_3x3_disu"
-        )
+        self.simpath = Path("c:/checkouts/modflow-debug-gui/data/ex_3x3_disu")
         self.var_names = {b"SLN_1/X": "double"}
         self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
 
@@ -37,7 +35,7 @@ class BMI:
         # this additionally only works when only one model is present
         with open(self.simpath / "mfsim.nam", "r") as namefile:
             content = namefile.read()
-            match = re.search(r"\s(\w+)\nEND MODELS", content)
+            match = re.search(r"\s(\w+)\nEND MODELS", content, re.IGNORECASE)
             if match:
                 model_name = match.group(1).upper()
             else:
@@ -54,7 +52,6 @@ class BMI:
         self.grid_type = self.grid_type.value.decode("ASCII")
         print(f"grid type: {self.grid_type}")
 
-
         # get grid size
         grid_size = ctypes.c_int(0)
         self.mf6_dll.get_grid_size(ctypes.byref(self.grid_id), ctypes.byref(grid_size))
@@ -68,7 +65,9 @@ class BMI:
         ):
             # get grid rank
             grid_rank = ctypes.c_int(0)
-            self.mf6_dll.get_grid_rank(ctypes.byref(self.grid_id), ctypes.byref(grid_rank))
+            self.mf6_dll.get_grid_rank(
+                ctypes.byref(self.grid_id), ctypes.byref(grid_rank)
+            )
             self.grid_rank = grid_rank.value
             print(f"grid rank: {self.grid_rank}")
 
@@ -102,7 +101,9 @@ class BMI:
                 grid_z = np.ctypeslib.ndpointer(
                     dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
                 )()
-                self.mf6_dll.get_grid_z(ctypes.byref(self.grid_id), ctypes.byref(grid_z))
+                self.mf6_dll.get_grid_z(
+                    ctypes.byref(self.grid_id), ctypes.byref(grid_z)
+                )
                 self.grid_z = grid_z.contents
                 print(f"grid z: {self.grid_z}")
         elif self.grid_type in ("structured quadrilaterals", "unstructured"):
@@ -125,13 +126,17 @@ class BMI:
         if self.grid_type == "unstructured":
             # get grid_node_count (node in BMI-context means vertex in Modflow context)
             grid_node_count = ctypes.c_int(0)
-            self.mf6_dll.get_grid_node_count(ctypes.byref(self.grid_id), ctypes.byref(grid_node_count))
+            self.mf6_dll.get_grid_node_count(
+                ctypes.byref(self.grid_id), ctypes.byref(grid_node_count)
+            )
             self.grid_node_count = grid_node_count.value
             print(f"grid_node_count: {self.grid_node_count}")
 
             # get grid_face_count
             grid_face_count = ctypes.c_int(0)
-            self.mf6_dll.get_grid_face_count(ctypes.byref(self.grid_id), ctypes.byref(grid_face_count))
+            self.mf6_dll.get_grid_face_count(
+                ctypes.byref(self.grid_id), ctypes.byref(grid_face_count)
+            )
             self.grid_face_count = grid_face_count.value
             print(f"grid_face_count: {self.grid_face_count}")
 
@@ -139,7 +144,9 @@ class BMI:
             nodes_per_face = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(self.grid_face_count,), flags="F"
             )()
-            self.mf6_dll.get_grid_nodes_per_face(ctypes.byref(self.grid_id), ctypes.byref(nodes_per_face))
+            self.mf6_dll.get_grid_nodes_per_face(
+                ctypes.byref(self.grid_id), ctypes.byref(nodes_per_face)
+            )
             self.nodes_per_face = nodes_per_face.contents
             print(f"nodes_per_face: {self.nodes_per_face}")
 
@@ -148,12 +155,12 @@ class BMI:
             face_nodes = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(face_nodes_size,), flags="F"
             )()
-            self.mf6_dll.get_grid_face_nodes(ctypes.byref(self.grid_id), ctypes.byref(face_nodes))
-            self.face_nodes = face_nodes.contents
+            self.mf6_dll.get_grid_face_nodes(
+                ctypes.byref(self.grid_id), ctypes.byref(face_nodes)
+            )
+            # Subtract 1 so that 0 describes the first element
+            self.face_nodes = face_nodes.contents - 1
             print(f"face_nodes: {self.face_nodes}")
-
-
-
 
         # initialize dictionary
         self.var_dict = defaultdict(dict)
@@ -177,6 +184,38 @@ class BMI:
             self.var_dict[key]["array"] = np.ctypeslib.ndpointer(
                 dtype=self.var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
             )()
+
+    """
+    grid_lines : (point_type=PointType.spatialxyz) : list
+    returns the model grid lines in a list.  each line is returned as a
+    list containing two tuples in the format [(x1,y1), (x2,y2)] where
+    x1,y1 and x2,y2 are the endpoints of the line.
+    CURRENTLY ONLY USABLE OR UNSTRUCTURED GRIDS
+    """
+
+    @property
+    def grid_lines(self):
+        lines = []
+        j = -1
+        for i, face_node in enumerate(self.face_nodes):
+            if i % (self.nodes_per_face[j] + 1):
+                lines.append(
+                    [
+                        (self.grid_x[face_node_old], self.grid_y[face_node_old]),
+                        (self.grid_x[face_node], self.grid_y[face_node]),
+                    ]
+                )
+            else:
+                j += 1
+            face_node_old = face_node
+        return lines
+
+    @property
+    def extent(self):
+        return (np.min(self.grid_x),
+                np.max(self.grid_x),
+                np.min(self.grid_y),
+                np.max(self.grid_y))
 
     def get_value(self, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
@@ -226,9 +265,11 @@ class BMI:
                 raise ValueError("The type is neither double nor int")
 
             vararray = self.var_dict[key]["array"].contents
-            if key == b"SLN_1/X":
+            if key == b"SLN_1/X" and self.grid_type == "rectilinear":
                 return (
                     self.grid_x,
                     self.grid_y,
                     vararray.reshape(self.grid_shape, order="A"),
                 )
+
+        return (None, None, None)

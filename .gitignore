@@ -1,6 +1,8 @@
 # Modflow output files
 *.lst
 *.hds
+*.output.cbc
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

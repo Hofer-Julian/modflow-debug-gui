@@ -20,6 +20,7 @@ from matplotlib.backends.backend_qt5agg import (
 from bmi_data import BMI
 from PyQt5.QtCore import QThreadPool
 from utils import Worker
+from matplotlib.collections import LineCollection
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -92,9 +93,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def draw_canvas(self, args):
         (grid_x, grid_y, head_values) = args
         self.ax.clear()
-        pc = self.ax.pcolormesh(grid_x, grid_y, head_values)
-        if hasattr(self, "colorbar"):
-            self.colorbar.update_normal(pc)
+        self.plot_grid()
+        if (grid_x, grid_y, head_values) == (None, None, None):
+            pass
         else:
-            self.colorbar = self.fig.colorbar(pc, ax=self.ax)
+            pc = self.ax.pcolormesh(grid_x, grid_y, head_values)
+            if hasattr(self, "colorbar"):
+                self.colorbar.update_normal(pc)
+            else:
+                self.colorbar = self.fig.colorbar(pc, ax=self.ax)
         self.ax.figure.canvas.draw()
+
+    def plot_grid(self):
+        """
+        Plot the grid lines.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+
+        lc = LineCollection(self.bmi.grid_lines)
+        self.ax.add_collection(lc)
+        self.ax.set_xlim(self.bmi.extent[0], self.bmi.extent[1])
+        self.ax.set_ylim(self.bmi.extent[2], self.bmi.extent[3])
+        return lc
+
+
+
