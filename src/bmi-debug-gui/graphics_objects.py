@@ -5,8 +5,6 @@ import numpy as np
 # Create a subclass of GraphicsObject.
 # The only required methods are paint() and boundingRect()
 # (see QGraphicsItem documentation)
-
-
 class MeshItem(pg.GraphicsObject):
     def __init__(self, bmi_state, color_map):
         pg.GraphicsObject.__init__(self)
@@ -18,7 +16,8 @@ class MeshItem(pg.GraphicsObject):
         # rather than re-drawing the shapes every time.
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
-        p.setPen(pg.mkPen('w'))
+        # 'k'seems to be black
+        p.setPen(pg.mkPen('k'))
         j = -1
         polygon = QtGui.QPolygonF()
         for i, face_node in enumerate(self.bmi_state.face_nodes):
