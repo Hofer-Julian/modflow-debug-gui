@@ -14,82 +14,82 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="PlotWidget" name="graphWidget" native="true"/>
       </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPushButton" name="btn_continue">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>386</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Continue time loop</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="box_pltgrid">
-          <property name="text">
-           <string>Plot model grid</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QPushButton" name="btn_continue">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>386</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Continue time loop</string>
+        </property>
+       </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <widget class="QCheckBox" name="box_pltgrid">
+        <property name="text">
+         <string>Plot model grid</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="btn_getval">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Get value</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="box_datatype">
         <item>
-         <widget class="QLineEdit" name="widget_input">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="placeholderText">
-           <string>Input variable name</string>
-          </property>
-         </widget>
+         <property name="text">
+          <string>double</string>
+         </property>
         </item>
         <item>
-         <widget class="QComboBox" name="box_datatype">
-          <item>
-           <property name="text">
-            <string>double</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>int</string>
-           </property>
-          </item>
-         </widget>
+         <property name="text">
+          <string>int</string>
+         </property>
         </item>
-        <item>
-         <widget class="QPushButton" name="btn_getval">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Get value</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="widget_input">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="placeholderText">
+         <string>Input variable name</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

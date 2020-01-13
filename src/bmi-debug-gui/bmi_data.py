@@ -242,7 +242,7 @@ class BMI:
         print(values)
         return ()
 
-    def advance_time_loop(self, ax, figure):
+    def advance_time_loop(self):
 
         # calculate
         self.mf6_dll.update()
@@ -266,6 +266,7 @@ class BMI:
 
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X" and self.grid_type == "rectilinear":
+                # TODO_JH only send vararray
                 return (
                     self.grid_x,
                     self.grid_y,
