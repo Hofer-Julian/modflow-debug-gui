@@ -27,74 +27,58 @@ from pathlib import Path
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-
     def __init__(self):
         super().__init__()
         self._main = QtWidgets.QWidget()
         ui_path = Path(__file__).absolute().parent / "assets" / "ui"
-        uic.loadUi(ui_path / 'mainwindow.ui', self)
-    #     self.setCentralWidget(self._main)
-    #     main_layout = QtWidgets.QVBoxLayout(self._main)
+        uic.loadUi(ui_path / "mainwindow.ui", self)
 
-    #     figure_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-    #     main_layout.addWidget(figure_canvas)
-    #     self.addToolBar(
-    #         QtCore.Qt.TopToolBarArea, NavigationToolbar(figure_canvas, self)
-    #     )
+        self.btn_continue.pressed.connect(self.btn_continue_pressed)
+        self.widget_input.textChanged.connect(self.widget_input_textChanged)
+        self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
-    #     self.fig = figure_canvas.figure
-    #     self.ax = self.fig.subplots()
+        data = [  ## fields are (time, open, close, min, max).
+            (1.0, 10, 13, 5, 15),
+            (2.0, 13, 17, 9, 20),
+            (3.0, 17, 14, 11, 23),
+            (4.0, 14, 15, 5, 19),
+            (5.0, 15, 9, 8, 22),
+            (6.0, 9, 15, 8, 16),
+        ]
+        from test import MeshItem
 
-    #     button_continue = QtWidgets.QPushButton("Continue time loop")
-    #     button_continue.pressed.connect(self.button_continue_pressed)
-    #     main_layout.addWidget(button_continue)
+        item = MeshItem(data)
+        self.graphWidget.addItem(item)
 
-    #     # TODO_JH: Fix erro message "Attempting to add QLayout "" to QWidget "", which already has a layout"
-    #     inner_layout = QtWidgets.QHBoxLayout(self._main)
-    #     main_layout.addLayout(inner_layout)
 
-    #     self.input_widget = QtWidgets.QLineEdit()
-    #     self.input_widget.setPlaceholderText("Input variable name")
-    #     self.input_widget.textChanged.connect(self.input_widget_textChanged)
 
-    #     self.combo_box = QtWidgets.QComboBox()
-    #     self.combo_box.addItems(["double", "int"])
+        self.bmi = BMI()
+        self.threadpool = QThreadPool()
+        # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
+        self.threadpool.setMaxThreadCount(1)
 
-    #     self.button_get_value = QtWidgets.QPushButton("Get value")
-    #     self.button_get_value.setEnabled(False)
-    #     self.button_get_value.pressed.connect(self.button_get_value_pressed)
+    def closeEvent(self, event):
+        self.bmi.mf6_dll.finalize()
+        event.accept()
 
-    #     inner_layout.addWidget(self.input_widget)
-    #     inner_layout.addWidget(self.combo_box)
-    #     inner_layout.addWidget(self.button_get_value)
+    def btn_continue_pressed(self):
+        if self.bmi.ct.value < self.bmi.et.value:
+            worker = Worker(self.bmi.advance_time_loop, self.ax, self.fig)
+            worker.signals.result.connect(self.draw_canvas)
+            self.threadpool.start(worker)
 
-    #     self.bmi = BMI()
-    #     self.threadpool = QThreadPool()
-    #     # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
-    #     self.threadpool.setMaxThreadCount(1)
+    def btn_getval_pressed(self):
+        worker = Worker(
+            self.bmi.get_value, self.widget_input.text(), self.box_datatype.currentText()
+        )
+        worker.signals.result.connect(lambda x: x)
+        self.threadpool.start(worker)
 
-    # def closeEvent(self, event):
-    #     self.bmi.mf6_dll.finalize()
-    #     event.accept()
-
-    # def button_continue_pressed(self):
-    #     if self.bmi.ct.value < self.bmi.et.value:
-    #         worker = Worker(self.bmi.advance_time_loop, self.ax, self.fig)
-    #         worker.signals.result.connect(self.draw_canvas)
-    #         self.threadpool.start(worker)
-
-    # def button_get_value_pressed(self):
-    #     worker = Worker(
-    #         self.bmi.get_value, self.input_widget.text(), self.combo_box.currentText()
-    #     )
-    #     worker.signals.result.connect(lambda x: x)
-    #     self.threadpool.start(worker)
-
-    # def input_widget_textChanged(self):
-    #     if len(self.input_widget.text()):
-    #         self.button_get_value.setEnabled(True)
-    #     else:
-    #         self.button_get_value.setEnabled(False)
+    def widget_input_textChanged(self):
+        if len(self.widget_input.text()):
+            self.btn_getval.setEnabled(True)
+        else:
+            self.btn_getval.setEnabled(False)
 
     # def draw_canvas(self, args):
     #     (grid_x, grid_y, head_values) = args
@@ -125,6 +109,4 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     #     self.ax.set_xlim(self.bmi.extent[0], self.bmi.extent[1])
     #     self.ax.set_ylim(self.bmi.extent[2], self.bmi.extent[3])
     #     return lc
-
-
 
