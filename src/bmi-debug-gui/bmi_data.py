@@ -11,7 +11,7 @@ class BMI:
         self.dllpath = Path(
             "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
         )
-        self.simpath = ui_path = Path(__file__).parent.parent.parent / "data" / "ex_3x3_disu"
+        self.simpath = ui_path = Path(__file__).parent.parent.parent / "data" / "test030_hani_xt3d_disu"
         self.var_names = {b"SLN_1/X": "double"}
         self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
 
@@ -243,7 +243,6 @@ class BMI:
         return ()
 
     def advance_time_loop(self):
-
         # calculate
         self.mf6_dll.update()
         # update time
@@ -265,12 +264,8 @@ class BMI:
                 raise ValueError("The type is neither double nor int")
 
             vararray = self.var_dict[key]["array"].contents
-            if key == b"SLN_1/X" and self.grid_type == "rectilinear":
+            if key == b"SLN_1/X":
                 # TODO_JH only send vararray
-                return (
-                    self.grid_x,
-                    self.grid_y,
-                    vararray.reshape(self.grid_shape, order="A"),
-                )
+                return {"head": vararray}
 
-        return (None, None, None)
+        return {}

@@ -5,10 +5,11 @@ import numpy as np
 # Create a subclass of GraphicsObject.
 # The only required methods are paint() and boundingRect()
 # (see QGraphicsItem documentation)
-class MeshItem(pg.GraphicsObject):
-    def __init__(self, bmi_state, color_map):
+class HeatMap(pg.GraphicsObject):
+    def __init__(self, bmi_state, colormap, kwargs):
         pg.GraphicsObject.__init__(self)
-        self.bmi_state = bmi_state
+        self.bmi_state = bmi_state        
+        self.headcolors = colormap.mapToQColor(kwargs["head"])
         self.generatePicture()
 
     def generatePicture(self):
@@ -26,7 +27,7 @@ class MeshItem(pg.GraphicsObject):
                     self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
             else:
                 j += 1
-                p.setBrush(pg.mkBrush('r'))
+                p.setBrush(pg.mkBrush(self.headcolors[j]))
                 p.drawPolygon(polygon)
                 polygon.clear()
         p.end()

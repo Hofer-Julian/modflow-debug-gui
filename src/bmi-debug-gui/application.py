@@ -18,7 +18,7 @@ from utils import Worker
 from matplotlib.collections import LineCollection
 import pyqtgraph as pg
 from pathlib import Path
-from graphics_objects import MeshItem, ColorBar
+from graphics_objects import HeatMap, ColorBar
 import numpy as np
 
 
@@ -66,14 +66,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.btn_getval.setEnabled(False)
 
-    def draw_canvas(self, args):
+    def draw_canvas(self, kwargs):
         self.graphWidget.clear()
         # make colormap
-        stops = np.r_[-1.0, -0.5, 0.5, 1.0]
-        colors = np.array([[0, 0, 1, 0.7], [0, 1, 0, 0.2], [0, 0, 0, 0.8], [1, 0, 0, 1.0]])
+        head = kwargs["head"]
+        stops = np.linspace(np.min(head), np.max(head), 4)
+        # blue, cyan, yellow, red
+        colors = np.array([[0., 0., 1., 1.], [0., 1., 1., 1.], [1., 1., 0., 1.], [1, 0, 0, 1.]])
         cm = pg.ColorMap(stops, colors)
-        self.graphWidget.addItem(MeshItem(self.bmi_state, cm))
-        colorbar = ColorBar(cm, 10, 200, label='Foo (Hz)')
+        heatmap = HeatMap(self.bmi_state, cm, kwargs)
+        self.graphWidget.addItem(heatmap)
+        colorbar = ColorBar(cm, 10, 200, label='head')
         self.graphWidget.scene().addItem(colorbar)
         # TODO_JH: Adjust colorbar when window is resized (translate is probably not suitable for that)
         colorbar.translate(700.0, 150.0)

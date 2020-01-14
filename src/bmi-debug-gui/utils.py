@@ -15,7 +15,7 @@ class WorkerSignals(QObject):
 
     """
 
-    result = pyqtSignal(tuple)
+    result = pyqtSignal(dict)
 
 
 class Worker(QRunnable):
