@@ -11,7 +11,9 @@ class BMI:
         self.dllpath = Path(
             "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
         )
-        self.simpath = ui_path = Path(__file__).parent.parent.parent / "data" / "test030_hani_xt3d_disu"
+        self.simpath = (
+            Path(__file__).parent.parent.parent / "data" / "test030_hani_xt3d_disu"
+        )
         self.var_names = {b"SLN_1/X": "double"}
         self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
 
@@ -185,38 +187,6 @@ class BMI:
                 dtype=self.var_dict[key]["type"], ndim=1, shape=(nsize,), flags="F"
             )()
 
-    """
-    grid_lines : (point_type=PointType.spatialxyz) : list
-    returns the model grid lines in a list.  each line is returned as a
-    list containing two tuples in the format [(x1,y1), (x2,y2)] where
-    x1,y1 and x2,y2 are the endpoints of the line.
-    CURRENTLY ONLY USABLE OR UNSTRUCTURED GRIDS
-    """
-
-    @property
-    def grid_lines(self):
-        lines = []
-        j = -1
-        for i, face_node in enumerate(self.face_nodes):
-            if i % (self.nodes_per_face[j] + 1):
-                lines.append(
-                    [
-                        (self.grid_x[face_node_old], self.grid_y[face_node_old]),
-                        (self.grid_x[face_node], self.grid_y[face_node]),
-                    ]
-                )
-            else:
-                j += 1
-            face_node_old = face_node
-        return lines
-
-    @property
-    def extent(self):
-        return (np.min(self.grid_x),
-                np.max(self.grid_x),
-                np.min(self.grid_y),
-                np.max(self.grid_y))
-
     def get_value(self, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
 
@@ -238,9 +208,8 @@ class BMI:
         else:
             raise ValueError("The type is neither double nor int")
 
-        values = array.contents
-        print(values)
-        return ()
+        array = array.contents
+        return {"array": array}
 
     def advance_time_loop(self):
         # calculate

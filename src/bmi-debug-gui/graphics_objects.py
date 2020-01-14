@@ -2,14 +2,16 @@ import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
 import numpy as np
 
+
 # Create a subclass of GraphicsObject.
 # The only required methods are paint() and boundingRect()
 # (see QGraphicsItem documentation)
 class HeatMap(pg.GraphicsObject):
-    def __init__(self, bmi_state, colormap, kwargs):
+    def __init__(self, bmi_state, colormap, grid, kwargs):
         pg.GraphicsObject.__init__(self)
-        self.bmi_state = bmi_state        
+        self.bmi_state = bmi_state
         self.headcolors = colormap.mapToQColor(kwargs["head"])
+        self.grid = grid
         self.generatePicture()
 
     def generatePicture(self):
@@ -17,8 +19,12 @@ class HeatMap(pg.GraphicsObject):
         # rather than re-drawing the shapes every time.
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
-        # 'k'seems to be black
-        p.setPen(pg.mkPen('k'))
+
+        if self.grid:
+            # 'k'seems to be black
+            p.setPen(pg.mkPen('k'))
+        else:
+            p.setPen(pg.mkPen(None))
         j = -1
         polygon = QtGui.QPolygonF()
         for i, face_node in enumerate(self.bmi_state.face_nodes):
@@ -83,21 +89,21 @@ class ColorBar(pg.GraphicsObject):
         # draw label
         br = p.boundingRect(0, 0, 0, 0, pg.QtCore.Qt.AlignRight, label)
         p.drawText(-br.width() / 2.0, h + br.height() + 5.0, label)
-        
+
         # done
         p.end()
 
         # compute rect bounds for underlying mask
         self.zone = mintx - 12.0, -15.0, br.width() - mintx, h + br.height() + 30.0
-        
+
     def paint(self, p, *args):
         # paint underlying mask
         p.setPen(pg.QtGui.QColor(255, 255, 255, 0))
         p.setBrush(pg.QtGui.QColor(255, 255, 255, 200))
         p.drawRoundedRect(*(self.zone + (9.0, 9.0)))
-        
+
         # paint colorbar
         p.drawPicture(0, 0, self.pic)
-        
+
     def boundingRect(self):
         return pg.QtCore.QRectF(self.pic.boundingRect())

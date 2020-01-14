@@ -48,6 +48,9 @@
         <property name="text">
          <string>Plot model grid</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -88,6 +91,19 @@
         </property>
         <property name="placeholderText">
          <string>Input variable name</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="widget_output">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="placeholderText">
+         <string>Output</string>
         </property>
        </widget>
       </item>

@@ -10,12 +10,10 @@ example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
 """
 
 
-
 from bmi_data import BMI
 from PyQt5 import uic, QtWidgets
 from PyQt5.QtCore import QThreadPool
 from utils import Worker
-from matplotlib.collections import LineCollection
 import pyqtgraph as pg
 from pathlib import Path
 from graphics_objects import HeatMap, ColorBar
@@ -27,15 +25,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super().__init__()
         self._main = QtWidgets.QWidget()
         ui_path = Path(__file__).absolute().parent / "assets" / "ui"
-        ## Switch to using white background and black foreground
-        pg.setConfigOption('background', 'w')
-        pg.setConfigOption('foreground', 'k')
+        # Switch to using white background and black foreground
+        pg.setConfigOption("background", "w")
+        pg.setConfigOption("foreground", "k")
         uic.loadUi(ui_path / "mainwindow.ui", self)
 
         self.btn_continue.pressed.connect(self.btn_continue_pressed)
         self.widget_input.textChanged.connect(self.widget_input_textChanged)
+        self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
         self.btn_getval.pressed.connect(self.btn_getval_pressed)
-        
+
         self.bmi_state = BMI()
         self.threadpool = QThreadPool()
         # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
@@ -48,7 +47,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def btn_continue_pressed(self):
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             worker = Worker(self.bmi_state.advance_time_loop)
-            worker.signals.result.connect(self.draw_canvas)
+            worker.signals.result.connect(self.evaluate_loop_data)
             self.threadpool.start(worker)
 
     def btn_getval_pressed(self):
@@ -57,7 +56,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.widget_input.text(),
             self.box_datatype.currentText(),
         )
-        worker.signals.result.connect(lambda x: x)
+        worker.signals.result.connect(
+            lambda array: self.widget_output.setText(repr(array["array"]))
+        )
         self.threadpool.start(worker)
 
     def widget_input_textChanged(self):
@@ -66,17 +67,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.btn_getval.setEnabled(False)
 
-    def draw_canvas(self, kwargs):
-        self.graphWidget.clear()
+    def box_pltgrid_stateChanged(self, enabled):
+        self.draw_canvas()
+
+    def evaluate_loop_data(self, loop_data):
         # make colormap
-        head = kwargs["head"]
-        stops = np.linspace(np.min(head), np.max(head), 4)
+        self.loop_data = loop_data
+        stops = np.linspace(np.min(loop_data["head"]), np.max(loop_data["head"]), 4)
         # blue, cyan, yellow, red
-        colors = np.array([[0., 0., 1., 1.], [0., 1., 1., 1.], [1., 1., 0., 1.], [1, 0, 0, 1.]])
-        cm = pg.ColorMap(stops, colors)
-        heatmap = HeatMap(self.bmi_state, cm, kwargs)
-        self.graphWidget.addItem(heatmap)
-        colorbar = ColorBar(cm, 10, 200, label='head')
-        self.graphWidget.scene().addItem(colorbar)
+        colors = np.array(
+            [
+                [0.0, 0.0, 1.0, 1.0],
+                [0.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 0.0, 1.0],
+                [1, 0, 0, 1.0],
+            ]
+        )
+        self.colormap = pg.ColorMap(stops, colors)
+        if hasattr(self, "colorbar") and self.colorbar in self.graphWidget.scene().items():
+            self.graphWidget.scene().removeItem(self.colorbar)
+
+        self.colorbar = ColorBar(self.colormap, 10, 200, label="head")
         # TODO_JH: Adjust colorbar when window is resized (translate is probably not suitable for that)
-        colorbar.translate(700.0, 150.0)
+        self.colorbar.translate(700.0, 150.0)
+        self.draw_canvas()
+
+    def draw_canvas(self):
+        self.heatmap = HeatMap(
+            self.bmi_state, self.colormap, self.box_pltgrid.isChecked(), self.loop_data
+        )
+        self.graphWidget.clear()
+        self.graphWidget.addItem(self.heatmap)
+        if self.colorbar not in self.graphWidget.scene().items():
+            self.graphWidget.scene().addItem(self.colorbar)
