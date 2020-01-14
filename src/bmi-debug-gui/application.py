@@ -80,7 +80,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 [0.0, 0.0, 1.0, 1.0],
                 [0.0, 1.0, 1.0, 1.0],
                 [1.0, 1.0, 0.0, 1.0],
-                [1, 0, 0, 1.0],
+                [1.0, 0.0, 0.0, 1.0],
             ]
         )
         self.colormap = pg.ColorMap(stops, colors)
