@@ -12,7 +12,7 @@ class BMI:
             "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
         )
         self.simpath = (
-            Path(__file__).parent.parent.parent / "data" / "ex_3x3_disu"
+            Path(__file__).parent.parent.parent / "data" / "test1002_biscqtg_disv_dev"
         )
         self.var_names = {b"SLN_1/X": "double"}
         self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))

@@ -25,17 +25,29 @@ class HeatMap(pg.GraphicsObject):
             p.setPen(pg.mkPen('k'))
         else:
             p.setPen(pg.mkPen(None))
-        j = -1
         polygon = QtGui.QPolygonF()
-        for i, face_node in enumerate(self.bmi_state.face_nodes):
-            if (i+1) % (self.bmi_state.nodes_per_face[j]+1):
-                polygon.append(QtCore.QPointF(
-                    self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
-            else:
-                j += 1
-                p.setBrush(pg.mkBrush(self.headcolors[j]))
-                p.drawPolygon(polygon)
-                polygon.clear()
+
+        # j = 0        
+        # for i, face_node in enumerate(self.bmi_state.face_nodes):
+        #     if (i+1) % (self.bmi_state.nodes_per_face[j]+1):
+        #         polygon.append(QtCore.QPointF(
+        #             self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
+        #         print(face_node)
+        #     else:
+        #         p.setBrush(pg.mkBrush(self.headcolors[j]))
+        #         p.drawPolygon(polygon)
+        #         polygon.clear()
+        #         j += 1
+
+        face_index = 0
+        for i, node_count in enumerate(self.bmi_state.nodes_per_face):
+            for j in range(node_count):
+                face_node = self.bmi_state.face_nodes[face_index + j]
+                polygon.append(QtCore.QPointF(self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
+            face_index += node_count + 1
+            p.setBrush(pg.mkBrush(self.headcolors[i]))
+            p.drawPolygon(polygon)
+            polygon.clear()
         p.end()
 
     def paint(self, p, *args):

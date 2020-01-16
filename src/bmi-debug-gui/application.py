@@ -34,11 +34,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.widget_input.textChanged.connect(self.widget_input_textChanged)
         self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
         self.btn_getval.pressed.connect(self.btn_getval_pressed)
-
         self.bmi_state = BMI()
+        
         self.threadpool = QThreadPool()
         # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
         self.threadpool.setMaxThreadCount(1)
+        
 
     def closeEvent(self, event):
         self.bmi_state.mf6_dll.finalize()
