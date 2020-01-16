@@ -38,7 +38,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.threadpool = QThreadPool()
         # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
         self.threadpool.setMaxThreadCount(1)
-        self.threadpool.start(Worker(self.init_bmi))
+        worker = Worker(self.init_bmi)
+        worker.signals.result.connect(self.continue_time_loop)
+        self.progressBar.setMaximum(0)
+        self.threadpool.start(worker)
 
     def closeEvent(self, event):
         self.bmi_state.mf6_dll.finalize()
@@ -47,10 +50,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def init_bmi(self):
         self.bmi_state = BMI()
         self.btn_continue.setEnabled(True)
-        self.continue_time_loop()
 
     def continue_time_loop(self):
         self.btn_continue.setEnabled(False)
+        self.progressBar.setMaximum(0)
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             worker = Worker(self.bmi_state.advance_time_loop)
             worker.signals.result.connect(self.evaluate_loop_data)
@@ -74,6 +77,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.btn_getval.setEnabled(False)
 
     def box_pltgrid_stateChanged(self, enabled):
+        self.progressBar.setMaximum(0)
         worker = Worker(self.calc_heatmap)
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)
@@ -108,13 +112,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.graphWidget.scene().removeItem(self.colorbar)
 
         self.colorbar = ColorBar(self.colormap, 10, 200, label="head")
-        # TODO_JH: Adjust colorbar when window is resized (translate is probably not suitable for that)
         self.colorbar.translate(700.0, 150.0)
         worker = Worker(self.calc_heatmap)
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)
         self.btn_continue.setEnabled(True)
-
 
     def calc_heatmap(self):
         self.heatmap = HeatMap(
@@ -122,6 +124,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         )
 
     def draw_canvas(self):
+        self.progressBar.setMaximum(100)
         self.graphWidget.clear()
         self.graphWidget.addItem(self.heatmap)
         if self.colorbar not in self.graphWidget.scene().items():

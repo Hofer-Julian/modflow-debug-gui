@@ -21,27 +21,30 @@ class HeatMap(pg.GraphicsObject):
         p = QtGui.QPainter(self.picture)
 
         if self.grid:
-            # 'k'seems to be black
+            # 'k' seems to be black
             p.setPen(pg.mkPen("k"))
         else:
             p.setPen(pg.mkPen(None))
-        polygon = QtGui.QPolygonF()
 
-        face_index = 0
-        for i, node_count in enumerate(self.bmi_state.nodes_per_face):
-            for j in range(node_count):
-                face_node = self.bmi_state.face_nodes[face_index + j]
-                polygon.append(
-                    QtCore.QPointF(
-                        self.bmi_state.grid_x[face_node],
-                        self.bmi_state.grid_y[face_node],
+        polygon = QtGui.QPolygonF()
+        if self.bmi_state.grid_type == "rectilinear":
+            pass
+        elif self.bmi_state.grid_type == "unstructured":
+            face_index = 0
+            for i, node_count in enumerate(self.bmi_state.nodes_per_face):
+                for j in range(node_count):
+                    face_node = self.bmi_state.face_nodes[face_index + j]
+                    polygon.append(
+                        QtCore.QPointF(
+                            self.bmi_state.grid_x[face_node],
+                            self.bmi_state.grid_y[face_node],
+                        )
                     )
-                )
-            face_index += node_count + 1
-            p.setBrush(pg.mkBrush(self.headcolors[i]))
-            p.drawPolygon(polygon)
-            polygon.clear()
-        p.end()
+                face_index += node_count + 1
+                p.setBrush(pg.mkBrush(self.headcolors[i]))
+                p.drawPolygon(polygon)
+                polygon.clear()
+            p.end()
 
     def paint(self, p, *args):
         p.drawPicture(0, 0, self.picture)
@@ -49,7 +52,7 @@ class HeatMap(pg.GraphicsObject):
     def boundingRect(self):
         # boundingRect _must_ indicate the entire area that will be drawn on
         # or else we will get artifacts and possibly crashing.
-        # (in this case, QPicture does all the work of computing the bouning rect for us)
+        # (in this case, QPicture does all the work of computing the bounding rect for us)
         return QtCore.QRectF(self.picture.boundingRect())
 
 

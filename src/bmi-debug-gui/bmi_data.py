@@ -40,6 +40,7 @@ class BMI:
             match = re.search(r"\s(\w+)\nEND MODELS", content, re.IGNORECASE)
             if match:
                 model_name = match.group(1).upper()
+                print(f"model name: {model_name}")
             else:
                 raise Exception("The model name could not be parsed")
 
