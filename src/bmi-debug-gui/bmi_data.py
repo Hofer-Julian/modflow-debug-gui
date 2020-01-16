@@ -100,7 +100,7 @@ class BMI:
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
 
-            if len(grid_shape) == 3:
+            if len(self.grid_shape) == 3:
                 grid_z = np.ctypeslib.ndpointer(
                     dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
                 )()

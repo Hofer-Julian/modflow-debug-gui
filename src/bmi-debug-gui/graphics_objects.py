@@ -27,19 +27,27 @@ class HeatMap(pg.GraphicsObject):
             p.setPen(pg.mkPen(None))
 
         polygon = QtGui.QPolygonF()
+        grid_x = self.bmi_state.grid_x
+        grid_y = self.bmi_state.grid_y
         if self.bmi_state.grid_type == "rectilinear":
-            pass
+            for i_x in range(len(grid_x) - 1):
+                for i_y in range(len(grid_y) - 1):
+                    polygon.append(QtCore.QPointF(grid_x[i_x], grid_y[i_y]))
+                    polygon.append(QtCore.QPointF(grid_x[i_x + 1], grid_y[i_y]))
+                    polygon.append(QtCore.QPointF(grid_x[i_x + 1], grid_y[i_y + 1]))
+                    polygon.append(QtCore.QPointF(grid_x[i_x], grid_y[i_y + 1]))
+
+                    color = self.headcolors[i_x + i_y]
+                    p.setBrush(pg.mkBrush(color))
+                    p.drawPolygon(polygon)
+                    polygon.clear()
+            p.end()
         elif self.bmi_state.grid_type == "unstructured":
             face_index = 0
             for i, node_count in enumerate(self.bmi_state.nodes_per_face):
                 for j in range(node_count):
                     face_node = self.bmi_state.face_nodes[face_index + j]
-                    polygon.append(
-                        QtCore.QPointF(
-                            self.bmi_state.grid_x[face_node],
-                            self.bmi_state.grid_y[face_node],
-                        )
-                    )
+                    polygon.append(QtCore.QPointF(grid_x[face_node], grid_y[face_node]))
                 face_index += node_count + 1
                 p.setBrush(pg.mkBrush(self.headcolors[i]))
                 p.drawPolygon(polygon)
