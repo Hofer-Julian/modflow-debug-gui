@@ -50,6 +50,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.continue_time_loop()
 
     def continue_time_loop(self):
+        self.btn_continue.setEnabled(False)
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             worker = Worker(self.bmi_state.advance_time_loop)
             worker.signals.result.connect(self.evaluate_loop_data)
@@ -112,6 +113,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         worker = Worker(self.calc_heatmap)
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)
+        self.btn_continue.setEnabled(True)
+
 
     def calc_heatmap(self):
         self.heatmap = HeatMap(
