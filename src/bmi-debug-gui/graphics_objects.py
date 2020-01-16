@@ -22,28 +22,21 @@ class HeatMap(pg.GraphicsObject):
 
         if self.grid:
             # 'k'seems to be black
-            p.setPen(pg.mkPen('k'))
+            p.setPen(pg.mkPen("k"))
         else:
             p.setPen(pg.mkPen(None))
         polygon = QtGui.QPolygonF()
-
-        # j = 0        
-        # for i, face_node in enumerate(self.bmi_state.face_nodes):
-        #     if (i+1) % (self.bmi_state.nodes_per_face[j]+1):
-        #         polygon.append(QtCore.QPointF(
-        #             self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
-        #         print(face_node)
-        #     else:
-        #         p.setBrush(pg.mkBrush(self.headcolors[j]))
-        #         p.drawPolygon(polygon)
-        #         polygon.clear()
-        #         j += 1
 
         face_index = 0
         for i, node_count in enumerate(self.bmi_state.nodes_per_face):
             for j in range(node_count):
                 face_node = self.bmi_state.face_nodes[face_index + j]
-                polygon.append(QtCore.QPointF(self.bmi_state.grid_x[face_node], self.bmi_state.grid_y[face_node]))
+                polygon.append(
+                    QtCore.QPointF(
+                        self.bmi_state.grid_x[face_node],
+                        self.bmi_state.grid_y[face_node],
+                    )
+                )
             face_index += node_count + 1
             p.setBrush(pg.mkBrush(self.headcolors[i]))
             p.drawPolygon(polygon)
@@ -62,16 +55,15 @@ class HeatMap(pg.GraphicsObject):
 
 # Adapted from https://gist.github.com/maedoc/b61090021d2a5161c5b9
 class ColorBar(pg.GraphicsObject):
-
     def __init__(self, cmap, width, height, ticks=None, tick_labels=None, label=None):
         pg.GraphicsObject.__init__(self)
 
         # handle args
-        label = label or ''
+        label = label or ""
         w, h = width, height
-        stops, colors = cmap.getStops('float')
+        stops, colors = cmap.getStops("float")
         smn, spp = stops.min(), stops.ptp()
-        stops = (stops - stops.min())/stops.ptp()
+        stops = (stops - stops.min()) / stops.ptp()
         if ticks is None:
             ticks = np.r_[0.0:1.0:5j, 1.0] * spp + smn
         tick_labels = tick_labels or ["%0.2g" % (t,) for t in ticks]
@@ -81,17 +73,17 @@ class ColorBar(pg.GraphicsObject):
         p = pg.QtGui.QPainter(self.pic)
 
         # draw bar with gradient following colormap
-        p.setPen(pg.mkPen('k'))
-        grad = pg.QtGui.QLinearGradient(w/2.0, 0.0, w/2.0, h*1.0)
+        p.setPen(pg.mkPen("k"))
+        grad = pg.QtGui.QLinearGradient(w / 2.0, 0.0, w / 2.0, h * 1.0)
         for stop, color in zip(stops, colors):
-            grad.setColorAt(1.0 - stop, pg.QtGui.QColor(*[255*c for c in color]))
+            grad.setColorAt(1.0 - stop, pg.QtGui.QColor(*[255 * c for c in color]))
         p.setBrush(pg.QtGui.QBrush(grad))
         p.drawRect(pg.QtCore.QRectF(0, 0, w, h))
 
         # draw ticks & tick labels
         mintx = 0.0
         for tick, tick_label in zip(ticks, tick_labels):
-            y_ = (1.0 - (tick - smn)/spp) * h
+            y_ = (1.0 - (tick - smn) / spp) * h
             p.drawLine(0.0, y_, -5.0, y_)
             br = p.boundingRect(0, 0, 0, 0, pg.QtCore.Qt.AlignRight, tick_label)
             if br.x() < mintx:

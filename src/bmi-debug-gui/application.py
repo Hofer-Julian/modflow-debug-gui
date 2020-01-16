@@ -30,22 +30,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pg.setConfigOption("foreground", "k")
         uic.loadUi(ui_path / "mainwindow.ui", self)
 
-        self.btn_continue.pressed.connect(self.btn_continue_pressed)
+        self.btn_continue.pressed.connect(self.continue_time_loop)
         self.widget_input.textChanged.connect(self.widget_input_textChanged)
         self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
         self.btn_getval.pressed.connect(self.btn_getval_pressed)
-        self.bmi_state = BMI()
-        
+
         self.threadpool = QThreadPool()
         # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
         self.threadpool.setMaxThreadCount(1)
-        
+        self.threadpool.start(Worker(self.init_bmi))
 
     def closeEvent(self, event):
         self.bmi_state.mf6_dll.finalize()
         event.accept()
 
-    def btn_continue_pressed(self):
+    def init_bmi(self):
+        self.bmi_state = BMI()
+        self.btn_continue.setEnabled(True)
+        self.continue_time_loop()
+
+    def continue_time_loop(self):
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             worker = Worker(self.bmi_state.advance_time_loop)
             worker.signals.result.connect(self.evaluate_loop_data)
@@ -69,12 +73,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.btn_getval.setEnabled(False)
 
     def box_pltgrid_stateChanged(self, enabled):
-        self.draw_canvas()
+        worker = Worker(self.calc_heatmap)
+        worker.signals.result.connect(self.draw_canvas)
+        self.threadpool.start(worker)
 
     def evaluate_loop_data(self, loop_data):
+        if hasattr(self, "loop_data"):
+            pass
+        else:
+            # After first loop, pltgrid can be disabled
+            self.box_pltgrid.setEnabled(True)
+
         # make colormap
         self.loop_data = loop_data
-        stops = np.linspace(np.min(loop_data["head"]), np.max(loop_data["head"]), 4)
+
+        stops = np.linspace(
+            np.min(self.loop_data["head"]), np.max(self.loop_data["head"]), 4
+        )
         # blue, cyan, yellow, red
         colors = np.array(
             [
@@ -85,18 +100,25 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ]
         )
         self.colormap = pg.ColorMap(stops, colors)
-        if hasattr(self, "colorbar") and self.colorbar in self.graphWidget.scene().items():
+        if (
+            hasattr(self, "colorbar")
+            and self.colorbar in self.graphWidget.scene().items()
+        ):
             self.graphWidget.scene().removeItem(self.colorbar)
 
         self.colorbar = ColorBar(self.colormap, 10, 200, label="head")
         # TODO_JH: Adjust colorbar when window is resized (translate is probably not suitable for that)
         self.colorbar.translate(700.0, 150.0)
-        self.draw_canvas()
+        worker = Worker(self.calc_heatmap)
+        worker.signals.result.connect(self.draw_canvas)
+        self.threadpool.start(worker)
 
-    def draw_canvas(self):
+    def calc_heatmap(self):
         self.heatmap = HeatMap(
             self.bmi_state, self.colormap, self.box_pltgrid.isChecked(), self.loop_data
         )
+
+    def draw_canvas(self):
         self.graphWidget.clear()
         self.graphWidget.addItem(self.heatmap)
         if self.colorbar not in self.graphWidget.scene().items():
