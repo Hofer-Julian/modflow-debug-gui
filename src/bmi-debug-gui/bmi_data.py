@@ -7,16 +7,11 @@ import re
 
 
 class BMI:
-    def __init__(self):
-        self.dllpath = Path(
-            "c:/checkouts/modflow6-martijn-fork/msvs/dll/x64/Debug/mf6.dll"
-        )
-        self.simpath = (
-            Path(__file__).parent.parent.parent / "data" / "test1002_biscqtg_disv_dev"
-        )
+    def __init__(self, dllpath, simpath):
         self.var_names = {b"SLN_1/X": "double"}
-        self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
-
+        self.dllpath = Path(dllpath)
+        self.simpath = Path(simpath)
+        self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))  
         os.chdir(self.simpath)
 
         # initialize the model

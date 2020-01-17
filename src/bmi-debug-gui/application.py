@@ -11,8 +11,8 @@ example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
 
 
 from bmi_data import BMI
-from PyQt5 import uic, QtWidgets
-from PyQt5.QtWidgets import QWidget, QMainWindow, QFileDialog, QDialog
+from PyQt5 import uic
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QDialog, QTableWidgetItem
 from PyQt5.QtCore import QThreadPool
 from utils import Worker
 import pyqtgraph as pg
@@ -30,11 +30,10 @@ class ApplicationWindow(QMainWindow):
         pg.setConfigOption("foreground", "k")
         uic.loadUi(ui_path / "mainwindow.ui", self)
 
-        dialog = QDirChooseDialog()
-        dialog.exec_()
+        self.dialog = QDirChooseDialog()
+        self.dialog.exec_()
 
         self.btn_continue.pressed.connect(self.continue_time_loop)
-        self.btn_opendir.pressed.connect(self.btn_opendir_pressed)
         self.widget_input.textChanged.connect(self.widget_input_textChanged)
         self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
         self.btn_getval.pressed.connect(self.btn_getval_pressed)
@@ -52,7 +51,7 @@ class ApplicationWindow(QMainWindow):
         event.accept()
 
     def init_bmi(self):
-        self.bmi_state = BMI()
+        self.bmi_state = BMI(self.dialog.dllpath, self.dialog.simpath)
         self.btn_continue.setEnabled(True)
 
     def continue_time_loop(self):
@@ -73,9 +72,6 @@ class ApplicationWindow(QMainWindow):
             lambda array: self.widget_output.setText(repr(array))
         )
         self.threadpool.start(worker)
-
-    def btn_opendir_pressed(self):
-        print(Path(QFileDialog.getExistingDirectory(options=QFileDialog.ShowDirsOnly)))
 
     def widget_input_textChanged(self):
         if len(self.widget_input.text()):
@@ -135,3 +131,15 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         ui_path = Path(__file__).absolute().parent / "assets" / "ui"
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
+
+        self.btn_opensim.pressed.connect(self.btn_opensim_pressed)
+        self.btn_opendll.pressed.connect(self.btn_opendll_pressed)
+
+    def btn_opensim_pressed(self):
+        self.simpath = QFileDialog.getExistingDirectory()
+        self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
+        
+    def btn_opendll_pressed(self):
+        self.dllpath = QFileDialog.getOpenFileName()[0]
+        self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))
+
