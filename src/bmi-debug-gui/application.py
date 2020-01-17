@@ -39,7 +39,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
         self.threadpool.setMaxThreadCount(1)
         worker = Worker(self.init_bmi)
-        worker.signals.result.connect(self.continue_time_loop)
+        worker.signals.result.connect(self.evaluate_loop_data)
         self.progressBar.setMaximum(0)
         self.threadpool.start(worker)
 
@@ -66,7 +66,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.box_datatype.currentText(),
         )
         worker.signals.result.connect(
-            lambda array: self.widget_output.setText(repr(array["array"]))
+            lambda array: self.widget_output.setText(repr(array))
         )
         self.threadpool.start(worker)
 
@@ -82,18 +82,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)
 
-    def evaluate_loop_data(self, loop_data):
-        if hasattr(self, "loop_data"):
-            pass
-        else:
-            # After first loop, pltgrid can be disabled
-            self.box_pltgrid.setEnabled(True)
-
+    def evaluate_loop_data(self):
         # make colormap
-        self.loop_data = loop_data
-
         stops = np.linspace(
-            np.min(self.loop_data["head"]), np.max(self.loop_data["head"]), 4
+            np.min(self.bmi_state.plotarray), np.max(self.bmi_state.plotarray), 4
         )
         # blue, cyan, yellow, red
         colors = np.array(
@@ -120,7 +112,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def calc_heatmap(self):
         self.heatmap = HeatMap(
-            self.bmi_state, self.colormap, self.box_pltgrid.isChecked(), self.loop_data
+            self.bmi_state, self.colormap, self.box_pltgrid.isChecked()
         )
 
     def draw_canvas(self):

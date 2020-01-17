@@ -7,10 +7,10 @@ import numpy as np
 # The only required methods are paint() and boundingRect()
 # (see QGraphicsItem documentation)
 class HeatMap(pg.GraphicsObject):
-    def __init__(self, bmi_state, colormap, grid, kwargs):
+    def __init__(self, bmi_state, colormap, grid):
         pg.GraphicsObject.__init__(self)
         self.bmi_state = bmi_state
-        self.headcolors = colormap.mapToQColor(kwargs["head"])
+        self.headcolors = colormap.mapToQColor(self.bmi_state.plotarray)
         self.grid = grid
         self.generatePicture()
 
