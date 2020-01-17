@@ -12,6 +12,7 @@ example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
 
 from bmi_data import BMI
 from PyQt5 import uic, QtWidgets
+from PyQt5.QtWidgets import QWidget, QMainWindow, QFileDialog, QDialog
 from PyQt5.QtCore import QThreadPool
 from utils import Worker
 import pyqtgraph as pg
@@ -20,17 +21,20 @@ from graphics_objects import HeatMap, ColorBar
 import numpy as np
 
 
-class ApplicationWindow(QtWidgets.QMainWindow):
+class ApplicationWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self._main = QtWidgets.QWidget()
         ui_path = Path(__file__).absolute().parent / "assets" / "ui"
         # Switch to using white background and black foreground
         pg.setConfigOption("background", "w")
         pg.setConfigOption("foreground", "k")
         uic.loadUi(ui_path / "mainwindow.ui", self)
 
+        dialog = QDirChooseDialog()
+        dialog.exec_()
+
         self.btn_continue.pressed.connect(self.continue_time_loop)
+        self.btn_opendir.pressed.connect(self.btn_opendir_pressed)
         self.widget_input.textChanged.connect(self.widget_input_textChanged)
         self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
         self.btn_getval.pressed.connect(self.btn_getval_pressed)
@@ -69,6 +73,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             lambda array: self.widget_output.setText(repr(array))
         )
         self.threadpool.start(worker)
+
+    def btn_opendir_pressed(self):
+        print(Path(QFileDialog.getExistingDirectory(options=QFileDialog.ShowDirsOnly)))
 
     def widget_input_textChanged(self):
         if len(self.widget_input.text()):
@@ -121,3 +128,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.graphWidget.addItem(self.heatmap)
         if self.colorbar not in self.graphWidget.scene().items():
             self.graphWidget.scene().addItem(self.colorbar)
+
+
+class QDirChooseDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        ui_path = Path(__file__).absolute().parent / "assets" / "ui"
+        uic.loadUi(ui_path / "dirchoosedialog.ui", self)
