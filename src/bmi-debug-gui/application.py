@@ -54,7 +54,7 @@ class ApplicationWindow(QMainWindow):
 
     def closeEvent(self, event):
         if hasattr(self, "bmi_state"):
-            self.bmi_state.mf6_dll.finalize()
+            self.bmi_dll.finalize()
         event.accept()
 
     def init_bmi(self):
@@ -66,7 +66,7 @@ class ApplicationWindow(QMainWindow):
         self.btn_continue.setEnabled(False)
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             self.progressBar.setMaximum(0)
-            worker = Worker(self.bmi_state.advance_time_loop, self.bmi_dll)
+            worker = Worker(self.bmi_dll.update)
             worker.signals.result.connect(self.evaluate_loop_data)
             self.threadpool.start(worker)
 
@@ -95,6 +95,7 @@ class ApplicationWindow(QMainWindow):
         self.threadpool.start(worker)
 
     def evaluate_loop_data(self):
+        self.bmi_state.eval_time_loop(self.bmi_dll)
         # Check if there are initial plotarray values
         if np.min(self.bmi_state.plotarray) == np.max(self.bmi_state.plotarray):
             self.continue_time_loop()
@@ -145,7 +146,7 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
         # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\bmi-debug-gui\data\ex_10x10_transient"
+        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test030_hani_xt3d_disu"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
         self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))

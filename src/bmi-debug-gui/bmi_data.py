@@ -8,6 +8,8 @@ import re
 
 class BMI:
     def __init__(self, bmi_dll, simpath):
+        # Currently it is only used for the head values,
+        # but it could be extended for multiple values
         self.var_names = {b"SLN_1/X": "double"}
         self.simpath = Path(simpath)
         os.chdir(self.simpath)
@@ -199,9 +201,7 @@ class BMI:
             if key == b"SLN_1/X":
                 self.plotarray = vararray
 
-    def advance_time_loop(self, bmi_dll):
-        # calculate
-        bmi_dll.update()
+    def eval_time_loop(self, bmi_dll):
         # update time
         bmi_dll.get_current_time(ctypes.byref(self.ct))
 
@@ -223,7 +223,6 @@ class BMI:
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
                 self.plotarray = vararray
-                print(f"Head values: {self.plotarray}")
 
     def get_value(self, bmi_dll, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
