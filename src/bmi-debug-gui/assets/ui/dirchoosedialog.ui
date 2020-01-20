@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>417</width>
-    <height>0</height>
+    <height>147</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -95,7 +95,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QDialogButtonBox" name="buttonBox">
+        <widget class="QDialogButtonBox" name="btn_box">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -113,7 +113,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btn_box</sender>
    <signal>accepted()</signal>
    <receiver>Dialog</receiver>
    <slot>accept()</slot>
@@ -129,7 +129,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btn_box</sender>
    <signal>rejected()</signal>
    <receiver>Dialog</receiver>
    <slot>reject()</slot>

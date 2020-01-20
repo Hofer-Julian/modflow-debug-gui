@@ -11,7 +11,7 @@ class BMI:
         self.var_names = {b"SLN_1/X": "double"}
         self.dllpath = Path(dllpath)
         self.simpath = Path(simpath)
-        self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))  
+        self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
         os.chdir(self.simpath)
 
         # initialize the model

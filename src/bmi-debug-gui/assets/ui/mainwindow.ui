@@ -54,13 +54,6 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QPushButton" name="btn_opendir">
-          <property name="text">
-           <string>Open model directory</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="btn_continue">
           <property name="enabled">
            <bool>false</bool>
