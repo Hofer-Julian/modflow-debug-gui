@@ -7,16 +7,11 @@ import re
 
 
 class BMI:
-    def __init__(self, bmi_dll, simpath):
+    def __init__(self, bmi_dll, model_name):
         # Currently it is only used for the head values,
         # but it could be extended for multiple values
         self.var_names = {b"SLN_1/X": "double"}
-        self.simpath = Path(simpath)
-        os.chdir(self.simpath)
-
-        # initialize the model
-        bmi_dll.initialize()
-
+        self.model_name = model_name
         self.ct = ctypes.c_double(0.0)
         bmi_dll.get_current_time(ctypes.byref(self.ct))
 
@@ -25,19 +20,6 @@ class BMI:
 
         # acessing exported value from dll
         self.maxstrlen = ctypes.c_int.in_dll(bmi_dll, "MAXSTRLEN").value
-
-        # TODO_JH: Find a better way to get the grid_id
-        # then parsing the model_name from the mfsim.nam file
-        # and then searching for the grid_id of a specific parameter
-        # this additionally only works when only one model is present
-        with open(self.simpath / "mfsim.nam", "r") as namefile:
-            content = namefile.read()
-            match = re.search(r"\.nam\s+(\w+)\n", content, re.IGNORECASE)
-            if match:
-                model_name = match.group(1).upper()
-                print(f"model name: {model_name}")
-            else:
-                raise Exception("The model name could not be parsed")
 
         c_var_name = ctypes.c_char_p((model_name + " NPF/K11").encode())
         self.grid_id = ctypes.c_int(0)
@@ -94,16 +76,16 @@ class BMI:
             bmi_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
-
-            if len(self.grid_shape) == 3:
-                grid_z = np.ctypeslib.ndpointer(
-                    dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
-                )()
-                bmi_dll.get_grid_z(
-                    ctypes.byref(self.grid_id), ctypes.byref(grid_z)
-                )
-                self.grid_z = grid_z.contents
-                print(f"grid z: {self.grid_z}")
+            # TODO_JH Implement get_grid_z
+            # if len(self.grid_shape) == 3:
+            #     grid_z = np.ctypeslib.ndpointer(
+            #         dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
+            #     )()
+            #     bmi_dll.get_grid_z(
+            #         ctypes.byref(self.grid_id), ctypes.byref(grid_z)
+            #     )
+            #     self.grid_z = grid_z.contents
+            #     print(f"grid z: {self.grid_z}")
         elif self.grid_type in ("structured quadrilaterals", "unstructured"):
             grid_x = np.ctypeslib.ndpointer(
                 dtype="double", ndim=1, shape=(self.grid_size,), flags="F"
@@ -223,6 +205,7 @@ class BMI:
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
                 self.plotarray = vararray
+            print(self.plotarray.size, self.grid_face_count)
 
     def get_value(self, bmi_dll, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
