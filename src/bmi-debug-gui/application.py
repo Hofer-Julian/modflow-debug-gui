@@ -20,6 +20,7 @@ from pathlib import Path
 from graphics_objects import HeatMap, ColorBar
 import numpy as np
 import sys
+import os
 
 ui_path = Path(__file__).absolute().parent / "assets" / "ui"
 
@@ -92,7 +93,7 @@ class ApplicationWindow(QMainWindow):
 
     def evaluate_loop_data(self):
         # Check if there are initial plotarray values
-        if (np.min(self.bmi_state.plotarray), np.max(self.bmi_state.plotarray)) == (0, 0):
+        if np.min(self.bmi_state.plotarray) == np.max(self.bmi_state.plotarray):
             self.continue_time_loop()
         else:
             # make colormap
@@ -141,7 +142,7 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
         # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\data\ex_10x10_transient"
+        self.simpath = r"C:\checkouts\modflow6-examples\mf6\test030_hani_xt3d_disu"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
         self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))

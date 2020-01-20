@@ -32,7 +32,7 @@ class BMI:
         # this additionally only works when only one model is present
         with open(self.simpath / "mfsim.nam", "r") as namefile:
             content = namefile.read()
-            match = re.search(r"\s(\w+)\nEND MODELS", content, re.IGNORECASE)
+            match = re.search(r"\.nam\s+(\w+)\n", content, re.IGNORECASE)
             if match:
                 model_name = match.group(1).upper()
                 print(f"model name: {model_name}")
@@ -199,7 +199,6 @@ class BMI:
 
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
-                # TODO_JH only send vararray
                 self.plotarray = vararray
 
     def advance_time_loop(self):
@@ -225,8 +224,8 @@ class BMI:
 
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
-                # TODO_JH only send vararray
                 self.plotarray = vararray
+                print(f"Head values: {self.plotarray}")
 
     def get_value(self, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
