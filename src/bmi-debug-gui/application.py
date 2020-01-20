@@ -172,7 +172,7 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
         # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test1002_biscqtg_disv_dev"
+        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test030_hani_xt3d_disu"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
         self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))

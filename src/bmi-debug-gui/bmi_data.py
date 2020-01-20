@@ -202,7 +202,6 @@ class BMI:
             vararray = self.var_dict[key]["array"].contents
             if key == b"SLN_1/X":
                 self.plotarray = vararray
-            print(self.plotarray.size, self.grid_face_count)
 
     def get_value(self, bmi_dll, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
