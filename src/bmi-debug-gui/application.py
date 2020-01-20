@@ -20,6 +20,7 @@ from pathlib import Path
 from graphics_objects import HeatMap, ColorBar
 import numpy as np
 import sys
+import ctypes
 import os
 
 ui_path = Path(__file__).absolute().parent / "assets" / "ui"
@@ -57,20 +58,22 @@ class ApplicationWindow(QMainWindow):
         event.accept()
 
     def init_bmi(self):
-        self.bmi_state = BMI(self.dialog.dllpath, self.dialog.simpath)
+        self.bmi_dll = ctypes.cdll.LoadLibrary(str(self.dialog.dllpath))
+        self.bmi_state = BMI(self.bmi_dll, self.dialog.simpath)
         self.btn_continue.setEnabled(True)
 
     def continue_time_loop(self):
         self.btn_continue.setEnabled(False)
         if self.bmi_state.ct.value < self.bmi_state.et.value:
             self.progressBar.setMaximum(0)
-            worker = Worker(self.bmi_state.advance_time_loop)
+            worker = Worker(self.bmi_state.advance_time_loop, self.bmi_dll)
             worker.signals.result.connect(self.evaluate_loop_data)
             self.threadpool.start(worker)
 
     def btn_getval_pressed(self):
         worker = Worker(
             self.bmi_state.get_value,
+            self.bmi_dll,
             self.widget_input.text(),
             self.box_datatype.currentText(),
         )
@@ -142,7 +145,7 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
         # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\modflow6-examples\mf6\test030_hani_xt3d_disu"
+        self.simpath = r"C:\checkouts\bmi-debug-gui\data\ex_10x10_transient"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
         self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))

@@ -7,24 +7,22 @@ import re
 
 
 class BMI:
-    def __init__(self, dllpath, simpath):
+    def __init__(self, bmi_dll, simpath):
         self.var_names = {b"SLN_1/X": "double"}
-        self.dllpath = Path(dllpath)
         self.simpath = Path(simpath)
-        self.mf6_dll = ctypes.cdll.LoadLibrary(str(self.dllpath))
         os.chdir(self.simpath)
 
         # initialize the model
-        self.mf6_dll.initialize()
+        bmi_dll.initialize()
 
         self.ct = ctypes.c_double(0.0)
-        self.mf6_dll.get_current_time(ctypes.byref(self.ct))
+        bmi_dll.get_current_time(ctypes.byref(self.ct))
 
         self.et = ctypes.c_double(0.0)
-        self.mf6_dll.get_end_time(ctypes.byref(self.et))
+        bmi_dll.get_end_time(ctypes.byref(self.et))
 
         # acessing exported value from dll
-        self.maxstrlen = ctypes.c_int.in_dll(self.mf6_dll, "MAXSTRLEN").value
+        self.maxstrlen = ctypes.c_int.in_dll(bmi_dll, "MAXSTRLEN").value
 
         # TODO_JH: Find a better way to get the grid_id
         # then parsing the model_name from the mfsim.nam file
@@ -41,18 +39,18 @@ class BMI:
 
         c_var_name = ctypes.c_char_p((model_name + " NPF/K11").encode())
         self.grid_id = ctypes.c_int(0)
-        self.mf6_dll.get_var_grid(c_var_name, ctypes.byref(self.grid_id))
+        bmi_dll.get_var_grid(c_var_name, ctypes.byref(self.grid_id))
         print(f"grid id: {self.grid_id.value}")
 
         # get grid type
         self.grid_type = ctypes.create_string_buffer(self.maxstrlen)
-        self.mf6_dll.get_grid_type(ctypes.byref(self.grid_id), self.grid_type)
+        bmi_dll.get_grid_type(ctypes.byref(self.grid_id), self.grid_type)
         self.grid_type = self.grid_type.value.decode("ASCII")
         print(f"grid type: {self.grid_type}")
 
         # get grid size
         grid_size = ctypes.c_int(0)
-        self.mf6_dll.get_grid_size(ctypes.byref(self.grid_id), ctypes.byref(grid_size))
+        bmi_dll.get_grid_size(ctypes.byref(self.grid_id), ctypes.byref(grid_size))
         self.grid_size = grid_size.value
         print(f"grid size: {self.grid_size}")
 
@@ -63,7 +61,7 @@ class BMI:
         ):
             # get grid rank
             grid_rank = ctypes.c_int(0)
-            self.mf6_dll.get_grid_rank(
+            bmi_dll.get_grid_rank(
                 ctypes.byref(self.grid_id), ctypes.byref(grid_rank)
             )
             self.grid_rank = grid_rank.value
@@ -73,7 +71,7 @@ class BMI:
             grid_shape = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(self.grid_rank,), flags="F"
             )()
-            self.mf6_dll.get_grid_shape(
+            bmi_dll.get_grid_shape(
                 ctypes.byref(self.grid_id), ctypes.byref(grid_shape)
             )
             self.grid_shape = grid_shape.contents
@@ -84,14 +82,14 @@ class BMI:
             grid_x = np.ctypeslib.ndpointer(
                 dtype="double", ndim=1, shape=(self.grid_shape[-1] + 1,), flags="F"
             )()
-            self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
+            bmi_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
             self.grid_x = grid_x.contents
             print(f"grid x: {self.grid_x}")
 
             grid_y = np.ctypeslib.ndpointer(
                 dtype="double", ndim=1, shape=(self.grid_shape[-2] + 1,), flags="F"
             )()
-            self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
+            bmi_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
 
@@ -99,7 +97,7 @@ class BMI:
                 grid_z = np.ctypeslib.ndpointer(
                     dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
                 )()
-                self.mf6_dll.get_grid_z(
+                bmi_dll.get_grid_z(
                     ctypes.byref(self.grid_id), ctypes.byref(grid_z)
                 )
                 self.grid_z = grid_z.contents
@@ -108,14 +106,14 @@ class BMI:
             grid_x = np.ctypeslib.ndpointer(
                 dtype="double", ndim=1, shape=(self.grid_size,), flags="F"
             )()
-            self.mf6_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
+            bmi_dll.get_grid_x(ctypes.byref(self.grid_id), ctypes.byref(grid_x))
             self.grid_x = grid_x.contents
             print(f"grid x: {self.grid_x}")
 
             grid_y = np.ctypeslib.ndpointer(
                 dtype="double", ndim=1, shape=(self.grid_size,), flags="F"
             )()
-            self.mf6_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
+            bmi_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
 
@@ -124,7 +122,7 @@ class BMI:
         if self.grid_type == "unstructured":
             # get grid_node_count (node in BMI-context means vertex in Modflow context)
             grid_node_count = ctypes.c_int(0)
-            self.mf6_dll.get_grid_node_count(
+            bmi_dll.get_grid_node_count(
                 ctypes.byref(self.grid_id), ctypes.byref(grid_node_count)
             )
             self.grid_node_count = grid_node_count.value
@@ -132,7 +130,7 @@ class BMI:
 
             # get grid_face_count
             grid_face_count = ctypes.c_int(0)
-            self.mf6_dll.get_grid_face_count(
+            bmi_dll.get_grid_face_count(
                 ctypes.byref(self.grid_id), ctypes.byref(grid_face_count)
             )
             self.grid_face_count = grid_face_count.value
@@ -142,7 +140,7 @@ class BMI:
             nodes_per_face = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(self.grid_face_count,), flags="F"
             )()
-            self.mf6_dll.get_grid_nodes_per_face(
+            bmi_dll.get_grid_nodes_per_face(
                 ctypes.byref(self.grid_id), ctypes.byref(nodes_per_face)
             )
             self.nodes_per_face = nodes_per_face.contents
@@ -153,7 +151,7 @@ class BMI:
             face_nodes = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(face_nodes_size,), flags="F"
             )()
-            self.mf6_dll.get_grid_face_nodes(
+            bmi_dll.get_grid_face_nodes(
                 ctypes.byref(self.grid_id), ctypes.byref(face_nodes)
             )
             # Subtract 1 so that 0 describes the first element
@@ -168,10 +166,10 @@ class BMI:
             nbytes = ctypes.c_int(0)
             self.var_dict[key]["name"] = ctypes.c_char_p(key)
 
-            self.mf6_dll.get_var_itemsize(
+            bmi_dll.get_var_itemsize(
                 self.var_dict[key]["name"], ctypes.byref(elsize)
             )
-            self.mf6_dll.get_var_nbytes(
+            bmi_dll.get_var_nbytes(
                 self.var_dict[key]["name"], ctypes.byref(nbytes)
             )
             nsize = int(nbytes.value / elsize.value)
@@ -185,12 +183,12 @@ class BMI:
 
             # get data
             if self.var_dict[key]["type"] == "double":
-                self.mf6_dll.get_value_ptr_double(
+                bmi_dll.get_value_ptr_double(
                     self.var_dict[key]["name"],
                     ctypes.byref(self.var_dict[key]["array"]),
                 )
             elif self.var_dict[key]["type"] == "int":
-                self.mf6_dll.get_value_ptr_int(
+                bmi_dll.get_value_ptr_int(
                     self.var_dict[key]["name"],
                     ctypes.byref(self.var_dict[key]["array"]),
                 )
@@ -201,21 +199,21 @@ class BMI:
             if key == b"SLN_1/X":
                 self.plotarray = vararray
 
-    def advance_time_loop(self):
+    def advance_time_loop(self, bmi_dll):
         # calculate
-        self.mf6_dll.update()
+        bmi_dll.update()
         # update time
-        self.mf6_dll.get_current_time(ctypes.byref(self.ct))
+        bmi_dll.get_current_time(ctypes.byref(self.ct))
 
         for key in self.var_names:
             # get data
             if self.var_dict[key]["type"] == "double":
-                self.mf6_dll.get_value_ptr_double(
+                bmi_dll.get_value_ptr_double(
                     self.var_dict[key]["name"],
                     ctypes.byref(self.var_dict[key]["array"]),
                 )
             elif self.var_dict[key]["type"] == "int":
-                self.mf6_dll.get_value_ptr_int(
+                bmi_dll.get_value_ptr_int(
                     self.var_dict[key]["name"],
                     ctypes.byref(self.var_dict[key]["array"]),
                 )
@@ -227,14 +225,14 @@ class BMI:
                 self.plotarray = vararray
                 print(f"Head values: {self.plotarray}")
 
-    def get_value(self, value_name, value_type):
+    def get_value(self, bmi_dll, value_name, value_type):
         name = ctypes.c_char_p(value_name.encode())
 
         elsize = ctypes.c_int(0)
         nbytes = ctypes.c_int(0)
 
-        self.mf6_dll.get_var_itemsize(name, ctypes.byref(elsize))
-        self.mf6_dll.get_var_nbytes(name, ctypes.byref(nbytes))
+        bmi_dll.get_var_itemsize(name, ctypes.byref(elsize))
+        bmi_dll.get_var_nbytes(name, ctypes.byref(nbytes))
         nsize = int(nbytes.value / elsize.value)
 
         array = np.ctypeslib.ndpointer(
@@ -242,9 +240,9 @@ class BMI:
         )()
 
         if value_type == "double":
-            self.mf6_dll.get_value_ptr_double(name, ctypes.byref(array))
+            bmi_dll.get_value_ptr_double(name, ctypes.byref(array))
         elif value_type == "int":
-            self.mf6_dll.get_value_ptr_int(name, ctypes.byref(array))
+            bmi_dll.get_value_ptr_int(name, ctypes.byref(array))
         else:
             raise ValueError("The type is neither double nor int")
 

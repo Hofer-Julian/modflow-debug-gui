@@ -11,7 +11,7 @@ class HeatMap(pg.GraphicsObject):
         pg.GraphicsObject.__init__(self)
         self.bmi_state = bmi_state
         self.headcolors = colormap.mapToQColor(self.bmi_state.plotarray)
-        
+
         self.grid = grid
         self.generatePicture()
 
@@ -37,7 +37,7 @@ class HeatMap(pg.GraphicsObject):
                     polygon.append(QtCore.QPointF(grid_x[i_x + 1], grid_y[i_y]))
                     polygon.append(QtCore.QPointF(grid_x[i_x + 1], grid_y[i_y + 1]))
                     polygon.append(QtCore.QPointF(grid_x[i_x], grid_y[i_y + 1]))
-                    
+
                     color = self.headcolors[i_x * (len(grid_y) - 1) + i_y]
                     p.setBrush(pg.mkBrush(color))
                     p.drawPolygon(polygon)
