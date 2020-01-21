@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal, QObject
+from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 # Adapted from
 # https://www.learnpyqt.com/courses/concurrent-execution/multithreading-pyqt-applications-qthreadpool/

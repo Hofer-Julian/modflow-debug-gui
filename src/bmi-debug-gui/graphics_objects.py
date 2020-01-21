@@ -1,6 +1,6 @@
+import numpy as np
 import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
-import numpy as np
 
 
 # Create a subclass of GraphicsObject.

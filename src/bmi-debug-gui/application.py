@@ -1,17 +1,18 @@
-from bmi_data import BMI
-from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QDialog, QTableWidgetItem
-from assets.ui import mainwindow, dirchoosedialog
-from PyQt5.QtCore import QThreadPool, Qt
-from utils import Worker
-import pyqtgraph as pg
-from pathlib import Path
-from graphics_objects import HeatMap, ColorBar
-import numpy as np
-import sys
 import ctypes
 import os
 import re
+import sys
+from pathlib import Path
+
+import numpy as np
+import pyqtgraph as pg
+from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMainWindow, QTableWidgetItem
+
+from assets.ui import dirchoosedialog, mainwindow
+from bmi_data import BMI
+from graphics_objects import ColorBar, HeatMap
+from utils import Worker
 
 
 class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
