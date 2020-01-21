@@ -1,18 +1,7 @@
-"""
-===============
-Embedding in Qt
-===============
-
-Simple Qt application embedding Matplotlib canvases.  This program will work
-equally well using Qt4 and Qt5.  Either version of Qt can be selected (for
-example) by setting the ``MPLBACKEND`` environment variable to "Qt4Agg" or
-"Qt5Agg", or by first importing the desired version of PyQt.
-"""
-
-
 from bmi_data import BMI
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QDialog, QTableWidgetItem
+from assets.ui import mainwindow, dirchoosedialog
 from PyQt5.QtCore import QThreadPool, Qt
 from utils import Worker
 import pyqtgraph as pg
@@ -24,19 +13,17 @@ import ctypes
 import os
 import re
 
-ui_path = Path(__file__).absolute().parent / "assets" / "ui"
 
-
-class ApplicationWindow(QMainWindow):
+class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def __init__(self):
         self.dialog = QDirChooseDialog()
-
         super().__init__()
+
         if self.dialog.exec_():
             # Switch to using white background and black foreground
             pg.setConfigOption("background", "w")
             pg.setConfigOption("foreground", "k")
-            uic.loadUi(ui_path / "mainwindow.ui", self)
+            self.setupUi(self)
             self.btn_continue.pressed.connect(self.continue_time_loop)
             self.widget_input.textChanged.connect(self.widget_input_textChanged)
             self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
@@ -167,10 +154,10 @@ class ApplicationWindow(QMainWindow):
             self.graphWidget.scene().addItem(self.colorbar)
 
 
-class QDirChooseDialog(QDialog):
+class QDirChooseDialog(QDialog, dirchoosedialog.Ui_Dialog):
     def __init__(self):
         super().__init__()
-        uic.loadUi(ui_path / "dirchoosedialog.ui", self)
+        self.setupUi(self)
         # TODO_JH: REMOVE
         self.simpath = r"C:\checkouts\bmi-debug-gui\data\test120_mv_dis-lgr_3models"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"

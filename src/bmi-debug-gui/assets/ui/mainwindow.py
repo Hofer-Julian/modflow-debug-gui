@@ -1,0 +1,95 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'mainwindow.ui'
+#
+# Created by: PyQt5 UI code generator 5.9.2
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(800, 601)
+        MainWindow.setMinimumSize(QtCore.QSize(800, 601))
+        MainWindow.setMaximumSize(QtCore.QSize(800, 601))
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setContentsMargins(10, 10, 10, 10)
+        self.verticalLayout.setSpacing(10)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.graphWidget = PlotWidget(self.centralwidget)
+        self.graphWidget.setObjectName("graphWidget")
+        self.horizontalLayout_3.addWidget(self.graphWidget)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.btn_continue = QtWidgets.QPushButton(self.centralwidget)
+        self.btn_continue.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btn_continue.sizePolicy().hasHeightForWidth())
+        self.btn_continue.setSizePolicy(sizePolicy)
+        self.btn_continue.setMaximumSize(QtCore.QSize(386, 16777215))
+        self.btn_continue.setObjectName("btn_continue")
+        self.horizontalLayout_2.addWidget(self.btn_continue)
+        self.box_pltgrid = QtWidgets.QCheckBox(self.centralwidget)
+        self.box_pltgrid.setEnabled(True)
+        self.box_pltgrid.setChecked(True)
+        self.box_pltgrid.setObjectName("box_pltgrid")
+        self.horizontalLayout_2.addWidget(self.box_pltgrid)
+        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        self.progressBar.setEnabled(True)
+        self.progressBar.setMaximum(100)
+        self.progressBar.setProperty("value", -1)
+        self.progressBar.setTextVisible(False)
+        self.progressBar.setObjectName("progressBar")
+        self.horizontalLayout_2.addWidget(self.progressBar)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.widget_input = QtWidgets.QLineEdit(self.centralwidget)
+        self.widget_input.setEnabled(True)
+        self.widget_input.setText("")
+        self.widget_input.setObjectName("widget_input")
+        self.horizontalLayout.addWidget(self.widget_input)
+        self.box_datatype = QtWidgets.QComboBox(self.centralwidget)
+        self.box_datatype.setObjectName("box_datatype")
+        self.box_datatype.addItem("")
+        self.box_datatype.addItem("")
+        self.horizontalLayout.addWidget(self.box_datatype)
+        self.btn_getval = QtWidgets.QPushButton(self.centralwidget)
+        self.btn_getval.setEnabled(False)
+        self.btn_getval.setObjectName("btn_getval")
+        self.horizontalLayout.addWidget(self.btn_getval)
+        self.widget_output = QtWidgets.QLineEdit(self.centralwidget)
+        self.widget_output.setEnabled(True)
+        self.widget_output.setReadOnly(True)
+        self.widget_output.setObjectName("widget_output")
+        self.horizontalLayout.addWidget(self.widget_output)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout_2.addLayout(self.verticalLayout)
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btn_continue.setText(_translate("MainWindow", "Continue time loop"))
+        self.box_pltgrid.setText(_translate("MainWindow", "Plot model grid"))
+        self.widget_input.setPlaceholderText(_translate("MainWindow", "Input variable name"))
+        self.box_datatype.setItemText(0, _translate("MainWindow", "double"))
+        self.box_datatype.setItemText(1, _translate("MainWindow", "int"))
+        self.btn_getval.setText(_translate("MainWindow", "Get value"))
+        self.widget_output.setPlaceholderText(_translate("MainWindow", "Output"))
+
+from pyqtgraph import PlotWidget
