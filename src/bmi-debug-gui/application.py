@@ -75,9 +75,9 @@ class ApplicationWindow(QMainWindow):
         # this additionally only works when only one model is present
         with open(self.simpath / "mfsim.nam", "r") as namefile:
             content = namefile.read()
-            match = re.search(r"\.nam\s+(\w+)\n", content, re.IGNORECASE)
-            if match:
-                self.model_names = [model.upper() for model in match.groups()]
+            matches = re.findall(r"\.nam\s+(\S+)\n", content)
+            if matches:
+                self.model_names = [model.upper() for model in matches]
             else:
                 raise Exception("The model names could not be parsed")
 
@@ -90,7 +90,7 @@ class ApplicationWindow(QMainWindow):
             self.threadpool.start(worker)
 
     def btn_getval_pressed(self):
-        # Has to be reimplemented for multiple models
+        # TOD_JH: Has to be reimplemented for multiple models
         pass
         # worker = Worker(
         #     self.bmi_state.get_value,
@@ -172,7 +172,7 @@ class QDirChooseDialog(QDialog):
         super().__init__()
         uic.loadUi(ui_path / "dirchoosedialog.ui", self)
         # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test030_hani_xt3d_disu"
+        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test120_mv_dis-lgr_3models"
         self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
         self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))
