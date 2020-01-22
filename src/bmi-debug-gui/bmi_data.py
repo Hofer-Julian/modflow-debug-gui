@@ -205,7 +205,8 @@ class BMI:
                 self.plotarray = vararray
 
     def get_value(self, bmi_dll, value_name, value_type):
-        name = ctypes.c_char_p(value_name.encode())
+        complete_name = self.model_name + " " + value_name
+        name = ctypes.c_char_p(complete_name.encode())
 
         elsize = ctypes.c_int(0)
         nbytes = ctypes.c_int(0)

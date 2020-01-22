@@ -11,7 +11,6 @@ class HeatMap(pg.GraphicsObject):
         pg.GraphicsObject.__init__(self)
         self.bmi_state = bmi_state
         self.headcolors = colormap.mapToQColor(self.bmi_state.plotarray)
-
         self.grid = grid
         self.generatePicture()
 

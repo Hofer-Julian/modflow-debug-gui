@@ -53,8 +53,13 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.bmi_dll.initialize()
         self.get_model_names()
         self.bmi_states = []
+
         for model_name in self.model_names:
             self.bmi_states.append(BMI(self.bmi_dll, model_name))
+            self.box_modelname.addItem(model_name)
+
+        self.box_modelname.setEnabled(True)
+        self.widget_input.setEnabled(True)
 
     def get_model_names(self):
         # TODO_JH: Find a better way to get the grid_id
@@ -78,18 +83,18 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.threadpool.start(worker)
 
     def btn_getval_pressed(self):
-        # TOD_JH: Has to be reimplemented for multiple models
-        pass
-        # worker = Worker(
-        #     self.bmi_state.get_value,
-        #     self.bmi_dll,
-        #     self.widget_input.text(),
-        #     self.box_datatype.currentText(),
-        # )
-        # worker.signals.result.connect(
-        #     lambda array: self.widget_output.setText(repr(array))
-        # )
-        # self.threadpool.start(worker)
+        for bmi_state in self.bmi_states:
+            if bmi_state.model_name == self.box_modelname.currentText():
+                worker = Worker(
+                    bmi_state.get_value,
+                    self.bmi_dll,
+                    self.widget_input.text(),
+                    self.box_datatype.currentText(),
+                )
+                worker.signals.result.connect(
+                    lambda array: self.widget_output.setText(repr(array))
+                )
+                self.threadpool.start(worker)
 
     def widget_input_textChanged(self):
         if len(self.widget_input.text()):
