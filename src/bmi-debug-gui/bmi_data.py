@@ -74,7 +74,7 @@ class BMI:
             bmi_dll.get_grid_y(ctypes.byref(self.grid_id), ctypes.byref(grid_y))
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
-            # TODO_JH Implement get_grid_z
+            # TODO_JH Implement get_grid_z in the bmi
             # if len(self.grid_shape) == 3:
             #     grid_z = np.ctypeslib.ndpointer(
             #         dtype="double", ndim=1, shape=(self.grid_shape[-3] + 1,), flags="F"
@@ -99,7 +99,7 @@ class BMI:
             self.grid_y = grid_y.contents
             print(f"grid y: {self.grid_y}")
 
-            # TODO_JH: Implement get_grid_ramk for unstructured grids in order to determine if grid_z exists.
+            # TODO_JH: Implement get_grid_rank for unstructured grids in order to determine if grid_z exists.
 
         if self.grid_type == "unstructured":
             # get grid_node_count (node in BMI-context means vertex in Modflow context)

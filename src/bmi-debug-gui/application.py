@@ -164,11 +164,6 @@ class QDirChooseDialog(QDialog, dirchoosedialog.Ui_Dialog):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        # TODO_JH: REMOVE
-        self.simpath = r"C:\checkouts\bmi-debug-gui\data\test120_mv_dis-lgr_3models"
-        self.dllpath = r"C:\checkouts\modflow6-martijn-fork\msvs\dll\x64\Debug\mf6.dll"
-        self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
-        self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))
 
         self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.btn_opensim.pressed.connect(self.btn_opensim_pressed)

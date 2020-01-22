@@ -57,6 +57,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.box_modelname = QtWidgets.QComboBox(self.centralwidget)
         self.box_modelname.setEnabled(False)
+        self.box_modelname.setMinimumSize(QtCore.QSize(100, 0))
         self.box_modelname.setObjectName("box_modelname")
         self.horizontalLayout.addWidget(self.box_modelname)
         self.widget_input = QtWidgets.QLineEdit(self.centralwidget)

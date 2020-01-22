@@ -15,8 +15,10 @@ pyinstaller -F /path/to/__main__.py
 ```
 or to create an executable which starts up faster but consists of multiple files
 ```
-pyinstaller -F /path/to/__main__.py
+pyinstaller /path/to/__main__.py
 ```
 
 # How to convert .ui files to .py files
+```
 pyuic5 -o [name].py [name].ui
+```
