@@ -1,6 +1,6 @@
 # BMI Debug GUI
 
-
+![screenshot][src/bmi-debug-gui/assets/screenshots/unstructured_big_model.PNG]
 
 ## How to develop on the BMI-Debug-GUI
 
