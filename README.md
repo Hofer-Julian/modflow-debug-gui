@@ -1,4 +1,8 @@
-# How to develop on the BMI-Debug-GUI
+# BMI Debug GUI
+
+
+
+## How to develop on the BMI-Debug-GUI
 
 1. Install Anaconda or Miniconda
 2. Open a shell where you have access to `conda` (e.g. via Anaconda Navigator -> Environments -> Triangle -> Open Terminal)
@@ -7,7 +11,7 @@
 5. Activate the environment with `conda activate ENVNAME`
 6. Run `python src/bmi-debug-gui/__main__.py`
 
-# How to create an executable with pyinstaller
+## How to create an executable with pyinstaller
 
 To create a single executable run
 ```
@@ -18,12 +22,12 @@ or to create an executable which starts up faster but consists of multiple files
 pyinstaller /path/to/__main__.py
 ```
 
-# How to convert .ui files to .py files
+## How to convert .ui files to .py files
 ```
 pyuic5 -o [name].py [name].ui
 ```
 
-# PyQtGraph
+## PyQtGraph
 
 This GUI uses the [pyqtgraph](http://www.pyqtgraph.org/) for its plotting capabilities. In order to display 3D graphics, install `pyopengl` via conda.
 However, take care **not** to install `pyopengl-accelerate` as it seems to make problems.
