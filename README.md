@@ -22,3 +22,8 @@ pyinstaller /path/to/__main__.py
 ```
 pyuic5 -o [name].py [name].ui
 ```
+
+# PyQtGraph
+
+This GUI uses the [pyqtgraph](http://www.pyqtgraph.org/) for its plotting capabilities. In order to display 3D graphics, install `pyopengl` via conda.
+However, take care **not** to install `pyopengl-accelerate` as it seems to make problems.
