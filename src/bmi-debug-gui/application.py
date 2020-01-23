@@ -31,7 +31,7 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
             self.threadpool = QThreadPool()
-            # TODO_JH: Jobs can still queue. Is this the wanted behaviour?
+            # Jobs queue, but never run concurrently.
             self.threadpool.setMaxThreadCount(1)
             worker = Worker(self.init_bmi)
             worker.signals.result.connect(self.continue_time_loop)
