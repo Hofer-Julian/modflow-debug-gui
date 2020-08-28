@@ -8,7 +8,7 @@
             "name": "Python: __main__",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/bmi-debug-gui/__main__.py",
+            "program": "${workspaceFolder}/bmi_debug_gui/__main__.py",
             "console": "integratedTerminal"
         }
     ]
