@@ -1,0 +1,24 @@
+name: Continuous integration
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install packages
+        run: |
+          pip install flake8
+          pip install black
+      - name: Run flake8
+        run: flake8
+      - name: Run black
+        run: black --check
