@@ -7,7 +7,7 @@ from application import ApplicationWindow
 
 def main():
     app = QApplication(sys.argv)
-    window = ApplicationWindow()
+    ApplicationWindow()
     sys.exit(app.exec_())
 
 

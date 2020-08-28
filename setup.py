@@ -36,7 +36,7 @@ setup(
     platforms="Windows, Mac OS-X, Linux",
     install_requires=["numpy", "PyQt5", "pyqtgraph"],
     packages=find_namespace_packages(exclude=("tests", "examples")),
-    version=get_version("imod_coupler/__init__.py"),
+    version=get_version("bmi_debug_gui/__init__.py"),
     classifiers=["Topic :: Scientific/Engineering :: Hydrology"],
     entry_points={"gui_scripts": ["bmigui = bmi_debug_gui.__main__:main"]},
 )
