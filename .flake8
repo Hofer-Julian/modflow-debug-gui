@@ -11,3 +11,4 @@ ignore =
     W504  # line break after binary operator
 statistics = True
 max-line-length = 88
+exclude = bmi_debug_gui/assets
