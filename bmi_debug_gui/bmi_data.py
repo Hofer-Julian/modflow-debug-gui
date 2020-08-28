@@ -43,9 +43,7 @@ class BMI:
         ):
             # get grid rank
             grid_rank = ctypes.c_int(0)
-            bmi_dll.get_grid_rank(
-                ctypes.byref(self.grid_id), ctypes.byref(grid_rank)
-            )
+            bmi_dll.get_grid_rank(ctypes.byref(self.grid_id), ctypes.byref(grid_rank))
             self.grid_rank = grid_rank.value
             print(f"grid rank: {self.grid_rank}")
 
@@ -53,9 +51,7 @@ class BMI:
             grid_shape = np.ctypeslib.ndpointer(
                 dtype="int", ndim=1, shape=(self.grid_rank,), flags="F"
             )()
-            bmi_dll.get_grid_shape(
-                ctypes.byref(self.grid_id), ctypes.byref(grid_shape)
-            )
+            bmi_dll.get_grid_shape(ctypes.byref(self.grid_id), ctypes.byref(grid_shape))
             self.grid_shape = grid_shape.contents
             print(f"grid shape: {self.grid_shape}")
 
@@ -148,12 +144,8 @@ class BMI:
             nbytes = ctypes.c_int(0)
             self.var_dict[key]["name"] = ctypes.c_char_p(key)
 
-            bmi_dll.get_var_itemsize(
-                self.var_dict[key]["name"], ctypes.byref(elsize)
-            )
-            bmi_dll.get_var_nbytes(
-                self.var_dict[key]["name"], ctypes.byref(nbytes)
-            )
+            bmi_dll.get_var_itemsize(self.var_dict[key]["name"], ctypes.byref(elsize))
+            bmi_dll.get_var_nbytes(self.var_dict[key]["name"], ctypes.byref(nbytes))
             nsize = int(nbytes.value / elsize.value)
 
             self.var_dict[key]["type"] = self.var_names[key]

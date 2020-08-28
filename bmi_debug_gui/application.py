@@ -114,17 +114,10 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
         max = np.max([np.max(bmi_state.plotarray) for bmi_state in self.bmi_states])
 
         # make colormap
-        stops = np.linspace(
-            min, max, 4
-        )
+        stops = np.linspace(min, max, 4)
         # blue, cyan, yellow, red
         colors = np.array(
-            [
-                [0, 0, 1, 1.0],
-                [0, 1, 1, 1.0],
-                [1, 1, 0, 1.0],
-                [1, 0, 0, 1.0],
-            ]
+            [[0, 0, 1, 1.0], [0, 1, 1, 1.0], [1, 1, 0, 1.0], [1, 0, 0, 1.0]]
         )
         self.colormap = pg.ColorMap(stops, colors)
         if (
@@ -147,8 +140,8 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def calc_heatmap(self):
         for bmi_state in self.bmi_states:
-            self.heatmaps.append(HeatMap(
-                bmi_state, self.colormap, self.box_pltgrid.isChecked())
+            self.heatmaps.append(
+                HeatMap(bmi_state, self.colormap, self.box_pltgrid.isChecked())
             )
 
     def draw_canvas(self):
