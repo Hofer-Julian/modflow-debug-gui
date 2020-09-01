@@ -6,4 +6,5 @@
     "python.formatting.provider": "black",
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
+    "editor.formatOnSave": true,
 }

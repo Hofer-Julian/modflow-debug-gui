@@ -34,7 +34,7 @@ setup(
     url="",
     license="",
     platforms="Windows, Mac OS-X, Linux",
-    install_requires=["numpy", "PyQt5", "pyqtgraph"],
+    install_requires=["numpy", "PyQt5", "pyqtgraph", "xmipy"],
     packages=find_namespace_packages(exclude=("tests", "examples")),
     version=get_version("bmi_debug_gui/__init__.py"),
     classifiers=["Topic :: Scientific/Engineering :: Hydrology"],
