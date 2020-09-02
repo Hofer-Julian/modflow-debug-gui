@@ -2,6 +2,7 @@
 ignore =
    # https://flake8.pycqa.org/en/latest/user/error-codes.html
     F401, # 'module' imported but unused
+    F841, #  variable assigned but unused
     # https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
     E402, # module level import not at top of file
     W292, # no newline at end of file

@@ -7,7 +7,7 @@ from bmi_debug_gui.application import ApplicationWindow
 
 def main():
     app = QApplication(sys.argv)
-    ApplicationWindow()
+    window = ApplicationWindow()
     sys.exit(app.exec_())
 
 
