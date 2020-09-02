@@ -32,6 +32,14 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
             self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
+            self.threadpool = QThreadPool()
+            # Jobs queue, but never run concurrently.
+            self.threadpool.setMaxThreadCount(1)
+            worker = Worker(self.init_bmi)
+            worker.signals.result.connect(self.continue_time_loop)
+            self.progressBar.setMaximum(0)
+            self.threadpool.start(worker)
+
             self.show()
         else:
             sys.exit(0)
