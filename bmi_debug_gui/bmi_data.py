@@ -52,6 +52,7 @@ class BMI:
 
             # TODO_JH Implement get_grid_z in the bmi
         elif self.grid_type in ("structured quadrilaterals", "unstructured"):
+            # TODO JH: Move to xmipy
             self.grid_x = np.empty(shape=(self.grid_size,), dtype="double", order="F")
             bmi_dll.get_grid_x(self.grid_id, self.grid_x)
             print(f"grid_x: {self.grid_x}")
@@ -64,6 +65,7 @@ class BMI:
             # in order to determine if grid_z exists.
 
         if self.grid_type == "unstructured":
+            # TODO JH: Move to xmipy
             # get grid_node_count (node in BMI-context means vertex in Modflow context)
             grid_node_count = ctypes.c_int(0)
             bmi_dll.get_grid_node_count(
@@ -106,7 +108,6 @@ class BMI:
         # but it could be extended for multiple values
         self.head_tag = bmi_dll.get_var_address("X", "SLN_1")
         self.plotarray = bmi_dll.get_value_ptr(self.head_tag)
-        pass
 
     def eval_time_loop(self, bmi_dll):
         # update time

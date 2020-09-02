@@ -6,13 +6,13 @@ from pathlib import Path
 
 import numpy as np
 import pyqtgraph as pg
-from PyQt5.QtCore import Qt, QThreadPool, QSettings
+from PyQt5.QtCore import QSettings, Qt, QThreadPool
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMainWindow, QTableWidgetItem
 
-from assets.ui import dirchoosedialog, mainwindow
-from bmi_data import BMI
-from graphics_objects import ColorBar, HeatMap
-from utils import Worker
+from bmi_debug_gui.assets.ui import dirchoosedialog, mainwindow
+from bmi_debug_gui.bmi_data import BMI
+from bmi_debug_gui.graphics_objects import ColorBar, HeatMap
+from bmi_debug_gui.utils import Worker
 from xmipy import XmiWrapper
 
 
@@ -32,13 +32,6 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
             self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
-            self.threadpool = QThreadPool()
-            # Jobs queue, but never run concurrently.
-            self.threadpool.setMaxThreadCount(1)
-            worker = Worker(self.init_bmi)
-            worker.signals.result.connect(self.continue_time_loop)
-            self.progressBar.setMaximum(0)
-            self.threadpool.start(worker)
             self.show()
         else:
             sys.exit(0)
@@ -54,8 +47,6 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             lib_path=str(self.dialog.dllpath),
             working_directory=str(self.simpath),
         )
-        # Write output to screen:
-        self.bmi_dll.set_int("ISTDOUTTOFILE", 0)
 
         self.bmi_dll.initialize()
         self.get_model_names()

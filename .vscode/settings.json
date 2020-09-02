@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "c:\\Users\\hofer_jn\\AppData\\Local\\Continuum\\anaconda3\\envs\\bmi-debug-gui\\python.exe",
+    "python.pythonPath": "C:\\Users\\hofer_jn\\AppData\\Local\\Continuum\\anaconda3\\envs\\bmi-debug-gui\\python.exe",
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
