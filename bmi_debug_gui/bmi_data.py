@@ -2,6 +2,7 @@ import ctypes
 from collections import defaultdict
 
 import numpy as np
+import os
 
 
 class BMI:
@@ -11,6 +12,7 @@ class BMI:
         self.et = bmi_dll.get_end_time()
 
         k11_tag = bmi_dll.get_var_address("K11", model_name, "NPF")
+        print(f"model_dir: {os.path.basename(bmi_dll.working_directory)}")
         self.grid_id = bmi_dll.get_var_grid(k11_tag)
         print(f"grid_id: {self.grid_id}")
 
@@ -52,7 +54,6 @@ class BMI:
 
             # TODO_JH Implement get_grid_z in the bmi
         elif self.grid_type in ("structured quadrilaterals", "unstructured"):
-            # TODO JH: Move to xmipy
             self.grid_x = np.empty(shape=(self.grid_size,), dtype="double", order="F")
             bmi_dll.get_grid_x(self.grid_id, self.grid_x)
             print(f"grid_x: {self.grid_x}")
@@ -65,43 +66,27 @@ class BMI:
             # in order to determine if grid_z exists.
 
         if self.grid_type == "unstructured":
-            # TODO JH: Move to xmipy
             # get grid_node_count (node in BMI-context means vertex in Modflow context)
-            grid_node_count = ctypes.c_int(0)
-            bmi_dll.get_grid_node_count(
-                ctypes.byref(self.grid_id), ctypes.byref(grid_node_count)
-            )
-            self.grid_node_count = grid_node_count.value
+            self.grid_node_count = bmi_dll.get_grid_node_count(self.grid_id)
             print(f"grid_node_count: {self.grid_node_count}")
 
-            # get grid_face_count
-            grid_face_count = ctypes.c_int(0)
-            bmi_dll.get_grid_face_count(
-                ctypes.byref(self.grid_id), ctypes.byref(grid_face_count)
-            )
-            self.grid_face_count = grid_face_count.value
-            print(f"grid_face_count: {self.grid_face_count}")
+            # get face_count
+            self.face_count = bmi_dll.get_grid_face_count(self.grid_id)
+            print(f"face_count: {self.face_count}")
 
             # get grid_node_per_face
-            nodes_per_face = np.ctypeslib.ndpointer(
-                dtype="int", ndim=1, shape=(self.grid_face_count,), flags="F"
-            )()
-            bmi_dll.get_grid_nodes_per_face(
-                ctypes.byref(self.grid_id), ctypes.byref(nodes_per_face)
+            self.nodes_per_face = np.empty(
+                shape=(self.face_count,), dtype="int", order="F"
             )
-            self.nodes_per_face = nodes_per_face.contents
+            bmi_dll.get_grid_nodes_per_face(self.grid_id, self.nodes_per_face)
             print(f"nodes_per_face: {self.nodes_per_face}")
 
             # get grid_face_nodes
-            face_nodes_size = np.sum(self.nodes_per_face + 1)
-            face_nodes = np.ctypeslib.ndpointer(
-                dtype="int", ndim=1, shape=(face_nodes_size,), flags="F"
-            )()
-            bmi_dll.get_grid_face_nodes(
-                ctypes.byref(self.grid_id), ctypes.byref(face_nodes)
-            )
+            face_nodes_count = np.sum(self.nodes_per_face + 1)
+            face_nodes = np.empty(shape=(face_nodes_count,), dtype="int", order="F")
+            bmi_dll.get_grid_face_nodes(self.grid_id, face_nodes)
             # Subtract 1 so that 0 describes the first element
-            self.face_nodes = face_nodes.contents - 1
+            self.face_nodes = face_nodes - 1
             print(f"face_nodes: {self.face_nodes}")
 
         # Currently it is only used for the head values,
