@@ -28,7 +28,12 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             pg.setConfigOption("foreground", "k")
             self.setupUi(self)
             self.btn_continue.pressed.connect(self.continue_time_loop)
-            self.widget_input.textChanged.connect(self.widget_input_textChanged)
+            self.widget_input_var_name.textChanged.connect(
+                self.widget_input_textChanged
+            )
+            self.widget_input_component_name.textChanged.connect(
+                self.widget_input_textChanged
+            )
             self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
             self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
@@ -65,7 +70,8 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.box_modelname.addItem(model_name)
 
         self.box_modelname.setEnabled(True)
-        self.widget_input.setEnabled(True)
+        self.widget_input_var_name.setEnabled(True)
+        self.widget_input_component_name.setEnabled(True)
 
     def get_model_names(self):
         # TODO_JH: Find a better way to get the grid_id
@@ -93,9 +99,8 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             if bmi_state.model_name == self.box_modelname.currentText():
                 worker = Worker(
                     bmi_state.get_value,
-                    self.bmi_dll,
-                    self.widget_input.text(),
-                    self.box_datatype.currentText(),
+                    self.widget_input_var_name.text(),
+                    self.widget_input_component_name.text(),
                 )
                 worker.signals.result.connect(
                     lambda array: self.widget_output.setText(repr(array))
@@ -103,10 +108,13 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
                 self.threadpool.start(worker)
 
     def widget_input_textChanged(self):
-        if len(self.widget_input.text()):
+        if self.widget_input_exists():
             self.btn_getval.setEnabled(True)
         else:
             self.btn_getval.setEnabled(False)
+
+    def widget_input_exists(self):
+        return len(self.widget_input_var_name.text()) > 0
 
     def box_pltgrid_stateChanged(self, enabled):
         self.progressBar.setMaximum(0)
@@ -137,7 +145,7 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
         self.heatmaps = []
         for bmi_state in self.bmi_states:
-            bmi_state.eval_time_loop(self.bmi_dll)
+            bmi_state.eval_time_loop()
         worker = Worker(self.calc_heatmap)
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)

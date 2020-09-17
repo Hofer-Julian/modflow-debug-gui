@@ -10,6 +10,9 @@ class BMI:
         self.model_name = model_name
         self.ct = bmi_dll.get_current_time()
         self.et = bmi_dll.get_end_time()
+        self.bmi_dll = bmi_dll
+
+        print(f"model_name: {self.model_name}")
 
         k11_tag = bmi_dll.get_var_address("K11", model_name, "NPF")
         print(f"model_dir: {os.path.basename(bmi_dll.working_directory)}")
@@ -91,34 +94,16 @@ class BMI:
 
         # Currently it is only used for the head values,
         # but it could be extended for multiple values
-        self.head_tag = bmi_dll.get_var_address("X", "SLN_1")
+        self.head_tag = bmi_dll.get_var_address("X", self.model_name)
         self.plotarray = bmi_dll.get_value_ptr(self.head_tag)
 
-    def eval_time_loop(self, bmi_dll):
+    def eval_time_loop(self):
         # update time
-        self.ct = bmi_dll.get_current_time()
-        self.plotarray = bmi_dll.get_value_ptr(self.head_tag)
+        self.ct = self.bmi_dll.get_current_time()
+        self.plotarray = self.bmi_dll.get_value_ptr(self.head_tag)
 
-    def get_value(self, bmi_dll, value_name, value_type):
-        complete_name = self.model_name + " " + value_name
-        name = ctypes.c_char_p(complete_name.encode())
-
-        elsize = ctypes.c_int(0)
-        nbytes = ctypes.c_int(0)
-
-        bmi_dll.get_var_itemsize(name, ctypes.byref(elsize))
-        bmi_dll.get_var_nbytes(name, ctypes.byref(nbytes))
-        nsize = int(nbytes.value / elsize.value)
-
-        array = np.ctypeslib.ndpointer(
-            dtype=value_type, ndim=1, shape=(nsize,), flags="F"
-        )()
-
-        if value_type == "double":
-            bmi_dll.get_value_ptr_double(name, ctypes.byref(array))
-        elif value_type == "int":
-            bmi_dll.get_value_ptr_int(name, ctypes.byref(array))
-        else:
-            raise ValueError("The type is neither double nor int")
-
-        return array.contents
+    def get_value(self, var_name, component_name):
+        var_tag = self.bmi_dll.get_var_address(
+            var_name, self.model_name, component_name
+        )
+        return self.bmi_dll.get_value_ptr(var_tag)
