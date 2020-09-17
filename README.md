@@ -1,15 +1,15 @@
 # BMI Debug GUI
 
-![screenshot](src/bmi-debug-gui/assets/screenshots/unstructured_big_model.PNG)
+![screenshot](bmi_debug_gui/assets/screenshots/unstructured_big_model.PNG)
 
-## How to develop on the BMI-Debug-GUI
+## How to develop on the BMI Debug GUI
 
 1. Install Anaconda or Miniconda
 2. Open a shell where you have access to `conda` (e.g. via Anaconda Navigator -> Environments -> Triangle -> Open Terminal)
 3. Go to the root of the project folder
 4. Execute `conda env create`
 5. Activate the environment with `conda activate ENVNAME`
-6. Run `python src/bmi-debug-gui/__main__.py`
+6. Run `python bmi_debug_gui/__main__.py`
 
 ## How to create an executable with pyinstaller
 

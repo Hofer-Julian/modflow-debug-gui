@@ -6,18 +6,20 @@ from pathlib import Path
 
 import numpy as np
 import pyqtgraph as pg
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtCore import QSettings, Qt, QThreadPool
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMainWindow, QTableWidgetItem
 
-from assets.ui import dirchoosedialog, mainwindow
-from bmi_data import BMI
-from graphics_objects import ColorBar, HeatMap
-from utils import Worker
+from bmi_debug_gui.assets.ui import dirchoosedialog, mainwindow
+from bmi_debug_gui.bmi_data import BMI
+from bmi_debug_gui.graphics_objects import ColorBar, HeatMap
+from bmi_debug_gui.utils import Worker
+from xmipy import XmiWrapper
 
 
 class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def __init__(self):
-        self.dialog = QDirChooseDialog()
+        self.settings = QSettings("Deltares", "bmi_debug_gui")
+        self.dialog = DirChooseDialog(self.settings)
         super().__init__()
 
         if self.dialog.exec_():
@@ -26,7 +28,12 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             pg.setConfigOption("foreground", "k")
             self.setupUi(self)
             self.btn_continue.pressed.connect(self.continue_time_loop)
-            self.widget_input.textChanged.connect(self.widget_input_textChanged)
+            self.widget_input_var_name.textChanged.connect(
+                self.widget_input_textChanged
+            )
+            self.widget_input_component_name.textChanged.connect(
+                self.widget_input_textChanged
+            )
             self.box_pltgrid.stateChanged.connect(self.box_pltgrid_stateChanged)
             self.btn_getval.pressed.connect(self.btn_getval_pressed)
 
@@ -37,6 +44,7 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             worker.signals.result.connect(self.continue_time_loop)
             self.progressBar.setMaximum(0)
             self.threadpool.start(worker)
+
             self.show()
         else:
             sys.exit(0)
@@ -47,9 +55,12 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
         event.accept()
 
     def init_bmi(self):
-        self.bmi_dll = ctypes.cdll.LoadLibrary(str(self.dialog.dllpath))
         self.simpath = Path(self.dialog.simpath)
-        os.chdir(self.simpath)
+        self.bmi_dll = XmiWrapper(
+            lib_path=str(self.dialog.dllpath),
+            working_directory=str(self.simpath),
+        )
+
         self.bmi_dll.initialize()
         self.get_model_names()
         self.bmi_states = []
@@ -59,7 +70,8 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.box_modelname.addItem(model_name)
 
         self.box_modelname.setEnabled(True)
-        self.widget_input.setEnabled(True)
+        self.widget_input_var_name.setEnabled(True)
+        self.widget_input_component_name.setEnabled(True)
 
     def get_model_names(self):
         # TODO_JH: Find a better way to get the grid_id
@@ -76,7 +88,7 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def continue_time_loop(self):
         self.btn_continue.setEnabled(False)
-        if self.bmi_states[0].ct.value < self.bmi_states[0].et.value:
+        if self.bmi_states[0].ct < self.bmi_states[0].et:
             self.progressBar.setMaximum(0)
             worker = Worker(self.bmi_dll.update)
             worker.signals.result.connect(self.evaluate_loop_data)
@@ -87,9 +99,8 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             if bmi_state.model_name == self.box_modelname.currentText():
                 worker = Worker(
                     bmi_state.get_value,
-                    self.bmi_dll,
-                    self.widget_input.text(),
-                    self.box_datatype.currentText(),
+                    self.widget_input_var_name.text(),
+                    self.widget_input_component_name.text(),
                 )
                 worker.signals.result.connect(
                     lambda array: self.widget_output.setText(repr(array))
@@ -97,10 +108,13 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
                 self.threadpool.start(worker)
 
     def widget_input_textChanged(self):
-        if len(self.widget_input.text()):
+        if self.widget_input_exists():
             self.btn_getval.setEnabled(True)
         else:
             self.btn_getval.setEnabled(False)
+
+    def widget_input_exists(self):
+        return len(self.widget_input_var_name.text()) > 0
 
     def box_pltgrid_stateChanged(self, enabled):
         self.progressBar.setMaximum(0)
@@ -114,17 +128,10 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
         max = np.max([np.max(bmi_state.plotarray) for bmi_state in self.bmi_states])
 
         # make colormap
-        stops = np.linspace(
-            min, max, 4
-        )
+        stops = np.linspace(min, max, 4)
         # blue, cyan, yellow, red
         colors = np.array(
-            [
-                [0, 0, 1, 1.0],
-                [0, 1, 1, 1.0],
-                [1, 1, 0, 1.0],
-                [1, 0, 0, 1.0],
-            ]
+            [[0, 0, 1, 1.0], [0, 1, 1, 1.0], [1, 1, 0, 1.0], [1, 0, 0, 1.0]]
         )
         self.colormap = pg.ColorMap(stops, colors)
         if (
@@ -138,17 +145,17 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
         self.heatmaps = []
         for bmi_state in self.bmi_states:
-            bmi_state.eval_time_loop(self.bmi_dll)
+            bmi_state.eval_time_loop()
         worker = Worker(self.calc_heatmap)
         worker.signals.result.connect(self.draw_canvas)
         self.threadpool.start(worker)
-        if bmi_state.ct.value < bmi_state.et.value:
+        if bmi_state.ct < bmi_state.et:
             self.btn_continue.setEnabled(True)
 
     def calc_heatmap(self):
         for bmi_state in self.bmi_states:
-            self.heatmaps.append(HeatMap(
-                bmi_state, self.colormap, self.box_pltgrid.isChecked())
+            self.heatmaps.append(
+                HeatMap(bmi_state, self.colormap, self.box_pltgrid.isChecked())
             )
 
     def draw_canvas(self):
@@ -160,19 +167,40 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
             self.graphWidget.scene().addItem(self.colorbar)
 
 
-class QDirChooseDialog(QDialog, dirchoosedialog.Ui_Dialog):
-    def __init__(self):
+class DirChooseDialog(QDialog, dirchoosedialog.Ui_Dialog):
+    def __init__(self, settings):
         super().__init__()
         self.setupUi(self)
+        self.settings = settings
 
+        self.get_last_state()
+
+        # Set flags and connect signals
         self.setWindowFlags(Qt.WindowSystemMenuHint | Qt.WindowTitleHint)
         self.btn_opensim.pressed.connect(self.btn_opensim_pressed)
         self.btn_opendll.pressed.connect(self.btn_opendll_pressed)
 
+    def get_last_state(self):
+        dllpath = self.settings.value("dllpath", "")
+        simpath = self.settings.value("simpath", "")
+
+        self.set_dllpath(dllpath)
+        self.set_simpath(simpath)
+
     def btn_opensim_pressed(self):
-        self.simpath = QFileDialog.getExistingDirectory()
-        self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
+        simpath = QFileDialog.getExistingDirectory()
+        self.settings.setValue("simpath", simpath)
+        self.set_simpath(simpath)
 
     def btn_opendll_pressed(self):
-        self.dllpath = QFileDialog.getOpenFileName()[0]
+        dllpath = QFileDialog.getOpenFileName()[0]
+        self.settings.setValue("dllpath", dllpath)
+        self.set_dllpath(dllpath)
+
+    def set_simpath(self, simpath):
+        self.simpath = simpath
+        self.tableWidget.setItem(0, 0, QTableWidgetItem(self.simpath))
+
+    def set_dllpath(self, dllpath):
+        self.dllpath = dllpath
         self.tableWidget.setItem(1, 0, QTableWidgetItem(self.dllpath))

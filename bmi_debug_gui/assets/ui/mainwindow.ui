@@ -122,7 +122,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="widget_input">
+         <widget class="QLineEdit" name="widget_input_var_name">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -135,17 +135,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="box_datatype">
-          <item>
-           <property name="text">
-            <string>double</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>int</string>
-           </property>
-          </item>
+         <widget class="QLineEdit" name="widget_input_component_name">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string>Input component name</string>
+          </property>
          </widget>
         </item>
         <item>
