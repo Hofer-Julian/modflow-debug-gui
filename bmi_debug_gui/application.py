@@ -10,7 +10,7 @@ from PyQt5.QtCore import QSettings, Qt, QThreadPool
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMainWindow, QTableWidgetItem
 
 from bmi_debug_gui.assets.ui import dirchoosedialog, mainwindow
-from bmi_debug_gui.bmi_data import BMI
+from bmi_debug_gui.bmi.abc import Bmi
 from bmi_debug_gui.graphics_objects import ColorBar, HeatMap
 from bmi_debug_gui.utils import Worker
 from xmipy import XmiWrapper
@@ -66,7 +66,7 @@ class ApplicationWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.bmi_states = []
 
         for model_name in self.model_names:
-            self.bmi_states.append(BMI(self.bmi_dll, model_name))
+            self.bmi_states.append(Bmi.get_bmi(self.bmi_dll, model_name))
             self.box_modelname.addItem(model_name)
 
         self.box_modelname.setEnabled(True)
